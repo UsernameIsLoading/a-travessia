@@ -856,9 +856,10 @@ button{cursor:pointer}
 </div>
 
 <div id="paginaCombate" class="page hidden">
-  <div class="topbar"><h1 class="logo">COMBATE</h1><p class="subtitle">Duelo por turnos</p></div>
+  <div class="topbar"><h1 class="logo">COMBATE</h1><p class="subtitle">Duelo por turnos • XP por combate</p></div>
   <section class="panel">
     <div class="form"><input id="oponenteCombate" type="text" placeholder="Usuário do adversário"><button class="main-btn red-btn" onclick="iniciarCombate()">DESAFIAR</button></div>
+    <div class="skill-card" style="margin-top:12px"><h2>☠️ CAÇAR MALDIÇÃO</h2><p>Você pode caçar apenas uma vez por dia. As maldições disponíveis dependem do seu maior streak.</p><button id="botaoCacar" class="main-btn purple-btn" onclick="cacarMaldicao()">CAÇAR MALDIÇÃO</button><div id="cacaBox" class="skill-shop"></div></div>
     <div id="combateBox" class="skill-shop"></div>
     <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA MISSÕES</button></div>
   </section>
@@ -981,7 +982,9 @@ function nomeTipo(tipo){
 
 function atualizarListaTarefas(){
   const lista=document.getElementById('listaTarefas'); lista.innerHTML='';
+  const hoje=new Date().getDay(); const wd=(hoje+6)%7;
   tarefas.forEach((tarefa,indice)=>{
+    if(!Array.isArray(tarefa.frequencia) || !tarefa.frequencia.includes(wd)) return;
     const item=document.createElement('div'); item.className='task '+tarefa.classe;
     const checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=!!tarefa.concluida; checkbox.disabled=!tarefa.id; checkbox.onclick=()=>concluirTarefa(indice);
     const texto=document.createElement('div'); texto.className='task-text'+(tarefa.concluida?' done':'');
@@ -1250,23 +1253,49 @@ async function abrirSkills(){
   try{
     const data=await api('/api/skills');
     const cats={elementar:'🔥 ELEMENTARES',reforco:'🛡️ REFORÇOS',enfraquecimento:'☠️ ENFRAQUECIMENTOS'};
-    box.innerHTML=Object.entries(cats).map(([cat,title])=>{
-      const items=data.skills.filter(x=>x.categoria===cat && x.visivel);
+    const grupos=Object.entries(cats).map(([cat,title])=>{
+      const items=data.skills.filter(x=>x.categoria===cat && !x.adquirida && x.ct<=data.ct);
       if(!items.length)return '';
-      return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> por uso • XP: <b>${x.xp}</b></div><div class="skill-effect">${x.efeito}</div>${x.adquirida?`<button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button>`:`<button class="main-btn purple-btn" onclick="comprarSkill('${x.id}')" ${x.xp_suficiente?'':'disabled'}>COMPRAR — ${x.xp} XP</button>`}</div>`).join('')}</div></div>`;
+      return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>`<div class="skill-card"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> • 💰 <b>${x.preco_xp} XP</b></div><div class="skill-effect">${x.efeito}</div><button class="main-btn purple-btn" onclick="comprarSkill('${x.id}')" ${x.pode_comprar?'':'disabled'}>${x.pode_comprar?'COMPRAR':'XP INSUFICIENTE'}</button></div>`).join('')}</div></div>`;
     }).join('');
-    const eq=data.skills.filter(x=>x.equipada).reduce((n,x)=>n+x.ct,0);
-    const liberadas=data.skills.filter(x=>!x.adquirida && x.visivel).length;
-    document.getElementById('skillResumo').textContent=`XP: ${data.xp} • CT: ${data.ct.toFixed(2)} • ${data.skills.filter(x=>x.adquirida).length} compradas • ${liberadas} liberadas para compra • ${eq.toFixed(2)} CT equipados`;
+    const owned=data.skills.filter(x=>x.adquirida);
+    const eq=owned.filter(x=>x.equipada).reduce((n,x)=>n+x.ct,0);
+    const ownHtml=owned.length?`<div class="skill-group"><h2>🎒 MINHAS SKILLS</h2><div class="skill-grid">${owned.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b></div><div class="skill-effect">${x.efeito}</div><button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button></div>`).join('')}</div></div>`:'';
+    box.innerHTML=`<div class="skill-card"><h2>💰 ${data.xp} XP</h2><p>CT disponível: <b>${data.ct.toFixed(2)}</b>. A loja mostra apenas skills que cabem no seu CT atual.</p></div>${grupos||'<div class="skill-card"><p>Nenhuma nova skill disponível para seu CT atual.</p></div>'}${ownHtml}`;
+    document.getElementById('skillResumo').textContent=`💰 ${data.xp} XP • ${owned.length}/${data.skills.length} compradas • ${eq.toFixed(2)} CT equipados`;
   }catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
-async function comprarSkill(id){if(!confirm('Comprar esta skill com XP?'))return;try{await api('/api/skills/'+encodeURIComponent(id)+'/buy',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
+async function comprarSkill(id){try{await api('/api/skills/'+encodeURIComponent(id)+'/buy',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
 async function alternarSkill(id){try{await api('/api/skills/'+encodeURIComponent(id)+'/toggle',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
-function abrirCombate(){mostrarPagina('paginaCombate');carregarCombate();}
+function abrirCombate(){mostrarPagina('paginaCombate');carregarCombate();carregarCaca();}
 async function carregarCombate(){
   const box=document.getElementById('combateBox');
-  try{const r=await api('/api/battles'); if(!r.length){box.innerHTML='<p>Nenhum combate ativo. Digite o usuário do adversário para desafiar.</p>';return;} box.innerHTML=r.map(b=>`<div class="skill-card"><h3>${escaparXml(b.oponente)}</h3><p>Seu HP: ${b.seu_hp.toFixed(1)} • CE: ${b.seu_ce.toFixed(1)}</p><button class="main-btn red-btn" onclick="abrirBatalha(${b.id})">CONTINUAR</button></div>`).join('');}catch(e){box.innerHTML=`<p>${e.message}</p>`;}
+  try{const r=await api('/api/battles'); if(!r.length){box.innerHTML='<p>Nenhum combate PvP ativo.</p>';return;} box.innerHTML=r.map(b=>`<div class="skill-card"><h3>${escaparXml(b.oponente)}</h3><p>Seu HP: ${b.seu_hp.toFixed(1)} • CE: ${b.seu_ce.toFixed(1)}</p><button class="main-btn red-btn" onclick="abrirBatalha(${b.id})">CONTINUAR</button></div>`).join('');}catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
+async function carregarCaca(){
+  const box=document.getElementById('cacaBox'), btn=document.getElementById('botaoCacar');
+  try{const r=await api('/api/entities'); renderCaca(r.entidades||[]); btn.disabled=true; btn.textContent='CAÇA DE HOJE JÁ REALIZADA';}catch(e){box.innerHTML='<p>'+e.message+'</p>';}
+}
+async function cacarMaldicao(){
+  const btn=document.getElementById('botaoCacar'); btn.disabled=true;
+  try{const r=await api('/api/hunt',{method:'POST'}); renderCaca(r.entidades||[]); btn.textContent='CAÇA DE HOJE JÁ REALIZADA';}
+  catch(e){btn.disabled=false;alert(e.message);}
+}
+function renderCaca(items){
+  const box=document.getElementById('cacaBox');
+  if(!items.length){box.innerHTML='<div class="skill-card"><p>Nenhuma maldição apareceu hoje.</p></div>';return;}
+  box.innerHTML='<div class="skill-grid">'+items.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p>HP: <b>${e.hp}</b> • Dano: <b>${e.damage}</b> • CT: <b>${e.ct}</b></p><p>${e.skills&&e.skills.length?'Skills: '+e.skills.map(x=>escaparXml(x.nome)).join(', '):'Sem habilidades especiais.'}${e.multiplayer?' • ⚔ MULTIPLAYER':''}</p><button class="main-btn red-btn" onclick="enfrentarMaldicao(${i})">ENFRENTAR</button></div>`).join('')+'</div>';
+  window.maldicoesHoje=items;
+}
+async function enfrentarMaldicao(i){
+  const e=(window.maldicoesHoje||[])[i]; if(!e)return;
+  try{const b=await api('/api/entity-battles',{method:'POST',body:JSON.stringify({entity:e})}); await abrirBatalhaMaldicao(b.id);}catch(err){alert(err.message);}
+}
+async function abrirBatalhaMaldicao(id){
+  const box=document.getElementById('combateBox');
+  try{const b=await api('/api/entity-battles/'+id); const skills=await api('/api/skills'); const eq=skills.skills.filter(x=>x.equipada); box.innerHTML=`<div class="skill-card"><h2>☠️ ${escaparXml(b.entity.grade)}</h2><p>${escaparXml(b.log.join(' • '))}</p><p><b>Você:</b> HP ${b.seu_hp.toFixed(1)} / CE ${b.seu_ce.toFixed(1)} &nbsp; | &nbsp; <b>Maldição:</b> HP ${b.inimigo_hp.toFixed(1)}</p>${b.status==='active'?`<button class="main-btn blue-btn" onclick="acaoMaldicao(${id},null)">ATAQUE BÁSICO (1d4)</button>${eq.map(x=>`<button class="main-btn purple-btn" onclick="acaoMaldicao(${id},'${x.id}')">${escaparXml(x.nome)} — ${x.ce} CE</button>`).join('')}`:'<p>Combate encerrado.</p>'}<button class="main-btn blue-btn" onclick="carregarCombate()">← COMBATES</button></div>`;}catch(e){box.innerHTML='<p>'+e.message+'</p>';}
+}
+async function acaoMaldicao(id,skill){try{await api('/api/entity-battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalhaMaldicao(id);}catch(e){alert(e.message);}}
 async function iniciarCombate(){const nome=document.getElementById('oponenteCombate').value.trim();if(!nome)return alert('Digite o usuário do adversário.');try{const b=await api('/api/battles',{method:'POST',body:JSON.stringify({oponente:nome})});document.getElementById('oponenteCombate').value='';await abrirBatalha(b.id);}catch(e){alert(e.message);}}
 async function abrirBatalha(id){
   const box=document.getElementById('combateBox');
