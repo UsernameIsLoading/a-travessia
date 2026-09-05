@@ -837,7 +837,7 @@ button{cursor:pointer}
     <div class="footer-actions">
       <button class="main-btn blue-btn" onclick="voltarPagina2()">← VOLTAR</button>
       <button class="main-btn purple-btn" onclick="abrirLeaderboard()">🏆 LEADERBOARD</button>
-      <button class="main-btn blue-btn" onclick="abrirPerfil()">👤 PERFIL</button>
+      <button class="main-btn blue-btn" onclick="abrirPerfil()">👤 PERFIL</button><button class="main-btn purple-btn" onclick="abrirCombate()">⚔ COMBATE</button>
     </div>
   </section>
 </div>
@@ -1181,15 +1181,15 @@ async function abrirPerfil(){
   try{
     const p=await api('/api/profile');
     document.getElementById('perfilUsuario').textContent=p.usuario;
-    const a=p.atributos, d=p.dias;
+    const a=p.atributos, b=p.base, v=p.votos, d=p.dias;
     const fmt=n=>Number(n).toFixed(2).replace('.',',');
-    document.getElementById('perfilBody').textContent=fmt(a.body);
-    document.getElementById('perfilMind').textContent=fmt(a.mind);
-    document.getElementById('perfilSoul').textContent=fmt(a.soul);
+    document.getElementById('perfilBody').textContent=fmt(b.body);
+    document.getElementById('perfilMind').textContent=fmt(b.mind);
+    document.getElementById('perfilSoul').textContent=fmt(b.soul);
     for(const c of ['body','mind','soul']){
       const k=c==='body'?'Corpo':c==='mind'?'Mente':'Alma';
       const id=c==='body'?'Body':c==='mind'?'Mind':'Soul';
-      const base=Number(a[c]); const voto=Math.max(0,base-Math.floor(base));
+      const base=Number(b[c]); const voto=Number(v[c]);
       document.getElementById('perfilVoto'+id).textContent='+'+fmt(voto);
       document.getElementById('perfilEf'+id).textContent=fmt(base);
       document.getElementById('perfilDias'+id).textContent=d[c==='body'?'corpo':c==='mind'?'mente':'alma'];
@@ -1314,3 +1314,31 @@ function fecharVotoPopup(event){
 </script>
 </body>
 </html>
+<style>
+.combat-grid{display:grid;gap:16px}.combat-card{border:1px solid rgba(255,255,255,.1);padding:16px;background:rgba(255,255,255,.025)}
+.skill-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.skill-item{border:1px solid rgba(255,255,255,.1);padding:10px}.skill-item label{display:flex;gap:8px;align-items:flex-start}.skill-meta{font-size:11px;color:#aaa;margin-top:4px}.skill-category{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#b65cff}.combat-bars{display:grid;grid-template-columns:1fr 1fr;gap:12px}.combat-bars .bar{border:1px solid rgba(255,255,255,.1);padding:12px}.combat-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.combat-log{max-height:220px;overflow:auto;font-size:12px;line-height:1.6;color:#ddd}.combat-log div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+@media(max-width:600px){.skill-list{grid-template-columns:1fr}.combat-bars{grid-template-columns:1fr}}
+</style>
+<div id="paginaCombate" class="page hidden">
+  <div class="topbar"><h1 class="logo">COMBATE</h1><p class="subtitle">Turnos • CT • CE • Estratégia</p></div>
+  <section class="panel combat-grid">
+    <div class="combat-card"><h1>⚔ Desafiar jogador</h1><div class="form"><select id="combatUser"></select><button class="main-btn red-btn" onclick="desafiarJogador()">DESAFIAR</button></div><div id="combatChallenges"></div></div>
+    <div class="combat-card"><h1>🧠 Skill Shop</h1><p id="skillSlots" class="profile-note">Carregando...</p><div id="skillShop" class="skill-list"></div><button class="main-btn purple-btn" onclick="salvarSkillsEquipadas()">EQUIPAR SKILLS</button></div>
+    <div class="combat-card"><h1>⚔ Arena</h1><div id="combatArena">Nenhum combate ativo.</div></div>
+    <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← TAREFAS</button></div>
+  </section>
+</div>
+<script>
+let skillsCache=[];
+async function abrirCombate(){mostrarPagina('paginaCombate'); await carregarCombate(); await carregarSkills();}
+async function carregarSkills(){
+  try{const x=await api('/api/skills');skillsCache=x.skills;document.getElementById('skillSlots').textContent=`CT: ${Number(x.ct).toFixed(2)} • Slots disponíveis: ${x.slots}`;const saved=new Set((await api('/api/combat')).flatMap(c=>c.skills||[]));document.getElementById('skillShop').innerHTML=skillsCache.map(s=>`<div class="skill-item"><label><input class="skill-check" type="checkbox" value="${s.id}"><span><b>${escaparXml(s.nome)}</b><div class="skill-category">${s.categoria}</div><div class="skill-meta">CT ${s.ct} • CE ${s.ce} • ${s.dano}</div></span></label></div>`).join('');}catch(e){document.getElementById('skillShop').textContent=e.message;}
+}
+async function salvarSkillsEquipadas(){const ids=[...document.querySelectorAll('.skill-check:checked')].map(x=>Number(x.value));try{const x=await api('/api/skills/equip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({skills:ids})});alert(`Skills equipadas: ${x.usado}/${x.slots} CT.`);await carregarCombate();}catch(e){alert(e.message);}}
+async function desafiarJogador(){const user=document.getElementById('combatUser').value;if(!user)return;try{await api('/api/combat/challenge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:user})});alert('Desafio enviado!');await carregarCombate();}catch(e){alert(e.message);}}
+async function aceitarCombate(id){try{await api(`/api/combat/${id}/accept`,{method:'POST'});await carregarCombate();}catch(e){alert(e.message);}}
+async function recusarCombate(id){try{await api(`/api/combat/${id}/decline`,{method:'POST'});await carregarCombate();}catch(e){alert(e.message);}}
+async function acaoCombate(id,action,skillId=0){try{await api(`/api/combat/${id}/action`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,skill_id:skillId})});await carregarCombate();}catch(e){alert(e.message);}}
+async function carregarCombate(){try{const users=await api('/api/combat/users');const sel=document.getElementById('combatUser');sel.innerHTML=users.length?users.map(u=>`<option>${escaparXml(u)}</option>`).join(''):'<option value="">Nenhum outro jogador</option>';const combats=await api('/api/combat');document.getElementById('combatChallenges').innerHTML=combats.filter(c=>c.status==='pending').map(c=>c.sou_desafiador?`<p>Desafio enviado para <b>${escaparXml(c.oponente)}</b>.</p>`:`<div class="combat-card"><b>${escaparXml(c.desafiador)}</b> desafiou você.<div class="combat-actions"><button class="main-btn purple-btn" onclick="aceitarCombate(${c.id})">ACEITAR</button><button class="main-btn blue-btn" onclick="recusarCombate(${c.id})">RECUSAR</button></div></div>`).join('');const active=combats.find(c=>c.status==='active');const arena=document.getElementById('combatArena');if(!active){arena.innerHTML=combats.length?'Aguardando resposta ou nenhum combate ativo.':'Nenhum combate ativo.';return;}const buttons=active.minha_vez?`<div class="combat-actions"><button class="main-btn red-btn" onclick="acaoCombate(${active.id},'basic')">ATAQUE BÁSICO (1d4)</button>${active.skills.map(id=>{const s=skillsCache.find(x=>x.id===id);return s?`<button class="main-btn purple-btn" onclick="acaoCombate(${active.id},'skill',${id})">${escaparXml(s.nome)} (${s.ce} CE)</button>`:''}).join('')}</div>`:'<p>⏳ Aguardando a vez do adversário...</p>';arena.innerHTML=`<h2>${escaparXml(active.oponente)}</h2><div class="combat-bars"><div class="bar">VOCÊ<br><b>HP ${Number(active.hp).toFixed(1)}</b> • CE ${Number(active.ce).toFixed(1)}</div><div class="bar">OPONENTE<br><b>HP ${Number(active.hp_oponente).toFixed(1)}</b> • CE ${Number(active.ce_oponente).toFixed(1)}</div></div>${buttons}<div class="combat-log">${active.logs.slice().reverse().map(x=>`<div>${escaparXml(x)}</div>`).join('')}</div>`;}catch(e){document.getElementById('combatArena').textContent=e.message;}}
+setInterval(()=>{if(!document.getElementById('paginaCombate').classList.contains('hidden'))carregarCombate();},4000);
+</script>
