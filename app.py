@@ -145,7 +145,7 @@ def current_day_streaks(c,uid,base):
     return out
 
 def user_payload(u):
-    c=db(); process_until_yesterday(c,u); tasks=get_tasks(c,u['id']); done=completion_set(c,u['id'],iso(today()))
+    c=db(); process_until_yesterday(c,u); tasks=[t for t in get_tasks(c,u['id']) if today().weekday() in t['frequencia']]; done=completion_set(c,u['id'],iso(today()))
     for t in tasks:t['concluida']=t['id'] in done
     s={k:dict(v) for k,v in DEFAULT_STREAKS.items()}
     for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):s[r['class']]={'dias':r['days'],'ultimoDia':r['last_day']}
@@ -184,6 +184,16 @@ def login():
 @app.get('/api/me')
 def me():
     u=current_user();return jsonify(autenticado=bool(u),usuario=u['username'] if u else None)
+@app.delete('/api/account')
+def delete_account():
+    u,err=require_user()
+    if err:return err
+    c=db()
+    # Battles reference users without cascading deletes, so remove them explicitly.
+    c.execute('DELETE FROM battles WHERE player1=? OR player2=?',(u['id'],u['id']))
+    c.execute('DELETE FROM users WHERE id=?',(u['id'],))
+    c.commit();c.close();session.clear();return jsonify(ok=True)
+
 @app.post('/api/logout')
 def logout():session.clear();return jsonify(ok=True)
 @app.get('/api/data')
@@ -218,6 +228,7 @@ def complete_task(task_id):
     if err:return err
     c=db();t=c.execute('SELECT * FROM tasks WHERE id=? AND user_id=?',(task_id,u['id'])).fetchone()
     if not t:c.close();return jsonify(error='Tarefa não encontrada.'),404
+    if today().weekday() not in json.loads(t['frequency_json']):c.close();return jsonify(error='Essa tarefa não está programada para hoje.'),400
     ds=iso(today());exists=c.execute('SELECT 1 FROM completions WHERE task_id=? AND day=?',(task_id,ds)).fetchone()
     if exists:c.execute('DELETE FROM completions WHERE task_id=? AND day=?',(task_id,ds));done=False
     else:c.execute('INSERT INTO completions(task_id,day) VALUES(?,?)',(task_id,ds));done=True
@@ -238,8 +249,8 @@ def attributes_for(c,uid):
     return base,bonus,eff,ch
 
 def stats_for(attrs,days):
-    days=max(1,int(days or 1));F=lambda a:30/((1+a/10)*days+30);fb,fm,fs=F(attrs['body']),F(attrs['mind']),F(attrs['soul'])
-    return {'F':{'corpo':fb,'mente':fm,'alma':fs},'HP':200*(1-fb),'ATK':200*(1-fb)/10,'CE':1000*(1-fs),'CT':1/fm}
+    days=max(1,int(days or 1));F=lambda a:30/((1+(a*a)/10)*days+30);fb,fm,fs=F(attrs['body']),F(attrs['mind']),F(attrs['soul'])
+    return {'F':{'corpo':fb,'mente':fm,'alma':fs},'HP':200*(1-fb),'CE':1000*(1-fs),'CT':1/fm}
 
 @app.get('/api/profile')
 def profile():
@@ -260,7 +271,7 @@ def skills():
     for sid,name,cat,skill_ct,ce,effect in SKILLS:
         cost={1:50,2:100,3:175,4:275,5:400}[skill_ct]
         acquired=sid in owned
-        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':effect,'preco_xp':cost,'adquirida':acquired,'pode_comprar':(not acquired and skill_ct<=ct and xp>=cost),'equipada':owned.get(sid,False)})
+        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':(not acquired and skill_ct<=ct and xp>=cost),'equipada':owned.get(sid,False)})
     c.close();return jsonify(skills=out,xp=xp,ct=ct)
 
 @app.post('/api/skills/<skill_id>/buy')
@@ -308,7 +319,7 @@ def leaderboard():
 def skill_dict(skill_id):
     x=next((x for x in SKILLS if x[0]==skill_id),None)
     if not x:return None
-    return {'id':x[0],'nome':x[1],'categoria':x[2],'ct':x[3],'ce':x[4],'efeito':x[5]}
+    return {'id':x[0],'nome':x[1],'categoria':x[2],'ct':x[3],'ce':x[4],'efeito':(f'Dano = {x[3]} + '+x[5].replace(' de dano.','').replace(' de dano','') if x[2]=='elementar' and 'dano' in x[5].lower() else x[5])}
 
 def battle_stats(c,uid):
     base,bonus,eff,ch=attributes_for(c,uid)
@@ -333,7 +344,7 @@ def entities():
             if g['ct']==1 and pool: skills=[random.choice(pool)]
             elif g['ct']>=2 and pool:
                 skills=random.sample(pool,min(len(pool),random.randint(1,min(3,len(pool)))))
-            out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage':damage,'ct':g['ct'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ce':x[4],'efeito':x[5]} for x in skills]})
+            out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage':damage,'ct':g['ct'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ce':x[4],'efeito':skill_dict(x[0])['efeito']} for x in skills]})
     c.execute('INSERT INTO hunts(user_id,day,entities_json) VALUES(?,?,?)',(u['id'],iso(today()),json.dumps(out,ensure_ascii=False)));c.commit();c.close()
     return jsonify(usou=True,entidades=out,streak=days)
 
@@ -386,6 +397,7 @@ def entity_battle_action(bid):
         elif '2d4' in sk['efeito']:dmg=random.randint(1,4)+random.randint(1,4)
         elif '1d6' in sk['efeito']:dmg=random.randint(1,6)
         elif '1d4' in sk['efeito']:dmg=random.randint(1,4)
+        dmg += sk['ct'] if sk['categoria']=='elementar' else 0
         log.append(f'Você usou {sk["nome"]} e causou {dmg} dano.')
     else:dmg=random.randint(1,4);log.append(f'Você atacou e causou {dmg} dano.')
     ehp=max(0,ehp-dmg)
@@ -452,7 +464,7 @@ def battle_action(bid):
         elif '2d4' in sk['efeito']:rolls=[random.randint(1,4),random.randint(1,4)]
         elif '1d6' in sk['efeito']:rolls=[random.randint(1,6)]
         elif '1d4' in sk['efeito']:rolls=[random.randint(1,4)]
-        dmg=sum(rolls) if rolls else 0;ohp=max(0,ohp-dmg);msg=f'{u["username"]} usou {sk["nome"]} e causou {dmg} dano.'
+        dmg=(sum(rolls) if rolls else 0) + (sk['ct'] if sk['categoria']=='elementar' else 0);ohp=max(0,ohp-dmg);msg=f'{u["username"]} usou {sk["nome"]} e causou {dmg} dano.'
     else:
         dmg=random.randint(1,4);ohp=max(0,ohp-dmg);msg=f'{u["username"]} atacou e causou {dmg} dano.'
     try:log=json.loads(b['log_json'])

@@ -723,7 +723,6 @@ button{cursor:pointer}
     <div class="todos-head"><div><h1 id="perfilUsuario">—</h1><p>Os status usam seus atributos e os dias de tarefas cumpridas.</p></div></div>
     <div class="profile-grid">
       <div class="profile-stat"><h3 class="red-text">HP</h3><div class="big" id="perfilHP">—</div></div>
-      <div class="profile-stat"><h3 class="red-text">ATK</h3><div class="big" id="perfilATK">—</div></div>
       <div class="profile-stat"><h3 class="purple-text">CE</h3><div class="big" id="perfilCE">—</div></div>
       <div class="profile-stat"><h3 class="blue-text">CT</h3><div class="big" id="perfilCT">—</div></div>
     </div>
@@ -732,8 +731,8 @@ button{cursor:pointer}
       <tr><td class="blue-text">Mente</td><td id="perfilMind">0</td><td id="perfilVotoMind">+0</td><td id="perfilEfMind">0</td><td id="perfilDiasMind">0</td></tr>
       <tr><td class="purple-text">Alma</td><td id="perfilSoul">0</td><td id="perfilVotoSoul">+0</td><td id="perfilEfSoul">0</td><td id="perfilDiasSoul">0</td></tr>
     </tbody></table>
-    <p class="profile-note">F(atributo, dias) = 30 / ((1 + atributo/10) × dias + 30). A criação de um Voto Vinculativo aplica imediatamente +0,5 no atributo correspondente. Os to-dos precisam ser marcados novamente a cada dia.</p>
-    <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA TAREFAS</button><button class="main-btn purple-btn" onclick="abrirPerfil()">ATUALIZAR</button></div>
+    <p class="profile-note">F(atributo, dias) = 30 / ((1 + atributo²/10) × dias + 30). A criação de um Voto Vinculativo aplica imediatamente +0,5 no atributo correspondente. Os to-dos precisam ser marcados novamente a cada dia.</p>
+    <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA TAREFAS</button><button class="main-btn purple-btn" onclick="abrirPerfil()">ATUALIZAR</button><button class="main-btn red-btn" onclick="deletarConta()">🗑️ DELETAR CONTA</button></div>
   </section>
 </div>
 
@@ -1222,10 +1221,14 @@ async function abrirPerfil(){
       document.getElementById('perfilDias'+id).textContent=d[c==='body'?'corpo':c==='mind'?'mente':'alma'];
     }
     document.getElementById('perfilHP').textContent=fmt(p.stats.HP);
-    document.getElementById('perfilATK').textContent=fmt(p.stats.ATK);
     document.getElementById('perfilCE').textContent=fmt(p.stats.CE);
     document.getElementById('perfilCT').textContent=fmt(p.stats.CT);
   }catch(e){alert(e.message);}
+}
+
+async function deletarConta(){
+  if(!confirm('Tem certeza? Sua conta, personagem, tarefas, streaks, skills e combates serão apagados permanentemente.'))return;
+  try{await api('/api/account',{method:'DELETE'});alert('Conta deletada.');location.reload();}catch(e){alert(e.message);}
 }
 
 async function logout(){
