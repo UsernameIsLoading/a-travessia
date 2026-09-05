@@ -26,6 +26,16 @@ SKILLS = [
 ('confusao','Confusão','enfraquecimento',4,25,'Chance de perder a ação.'),('medo','Medo','enfraquecimento',2,15,'Causa -2 dano por 2 turnos.'),('aprisionamento','Aprisionamento','enfraquecimento',4,30,'Impede ataques físicos por 1 turno.'),('perturbacao-mental','Perturbação Mental','enfraquecimento',3,20,'Próxima skill custa +10 CE.'),('drenagem','Drenagem','enfraquecimento',4,30,'Rouba 1d4 CE.'),
 ('dreno-vital','Dreno Vital','enfraquecimento',5,40,'1d6 de dano e recupera metade do dano.'),('fragilidade','Fragilidade','enfraquecimento',3,20,'Próximo dano recebido recebe +1d4.'),('provocacao','Provocação','enfraquecimento',2,5,'Oponente é obrigado a usar ataque básico no próximo turno.'),('exaustao','Exaustão','enfraquecimento',4,25,'Próxima skill custa +50% CE.'),('sentenca','Sentença','enfraquecimento',5,50,'Após 3 turnos, causa 2d6 de dano.')]
 
+def skill_xp_cost(ct):
+    return {1:50, 2:100, 3:175, 4:275, 5:400}.get(int(ct), 500)
+
+def skill_dict(sid):
+    for x in SKILLS:
+        if x[0] == sid:
+            return {'id':x[0],'nome':x[1],'categoria':x[2],'ct':x[3],'ce':x[4],'efeito':x[5],'xp':skill_xp_cost(x[3])}
+    return None
+
+
 
 def db():
     c = sqlite3.connect(DB_PATH)
@@ -49,6 +59,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS vote_bonuses(user_id INTEGER NOT NULL,class TEXT NOT NULL,bonus REAL NOT NULL DEFAULT 0.5,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+    CREATE TABLE IF NOT EXISTS player_xp(user_id INTEGER PRIMARY KEY,xp INTEGER NOT NULL DEFAULT 0,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
     ''')
     cols=[r['name'] for r in c.execute('PRAGMA table_info(tasks)')]
@@ -136,6 +147,7 @@ def register():
     c=db()
     try:
         cur=c.execute('INSERT INTO users(username,password_hash,last_processed_day) VALUES(?,?,?)',(username,generate_password_hash(password),iso(today()-timedelta(days=1)))); uid=cur.lastrowid
+        c.execute('INSERT INTO player_xp(user_id,xp) VALUES (?,0)',(uid,))
         for cls in CLASSES:c.execute('INSERT INTO streaks(user_id,class,days,last_day) VALUES(?,?,0,NULL)',(uid,cls))
         c.commit()
     except sqlite3.IntegrityError:c.rollback();c.close();return jsonify(error='Esse usuário já existe.'),409
@@ -221,9 +233,37 @@ def profile():
 def skills():
     u,err=require_user()
     if err:return err
-    c=db();owned={r['skill_id']:bool(r['equipped']) for r in c.execute('SELECT skill_id,equipped FROM user_skills WHERE user_id=?',(u['id'],))};out=[]
-    for sid,name,cat,ct,ce,effect in SKILLS:out.append({'id':sid,'nome':name,'categoria':cat,'ct':ct,'ce':ce,'efeito':effect,'adquirida':True,'equipada':owned.get(sid,False)})
-    c.close();return jsonify(skills=out)
+    c=db(); process_until_yesterday(c,u)
+    row=c.execute('SELECT xp FROM player_xp WHERE user_id=?',(u['id'],)).fetchone()
+    if not row:
+        c.execute('INSERT OR IGNORE INTO player_xp(user_id,xp) VALUES (?,0)',(u['id'],)); c.commit(); xp=0
+    else: xp=int(row['xp'])
+    ct=current_ct(c,u['id'])
+    owned={r['skill_id']:bool(r['equipped']) for r in c.execute('SELECT skill_id,equipped FROM user_skills WHERE user_id=?',(u['id'],))}
+    out=[]
+    for sid,name,cat,ct_cost,ce,effect in SKILLS:
+        xp_cost=skill_xp_cost(ct_cost); adquirida=sid in owned
+        out.append({'id':sid,'nome':name,'categoria':cat,'ct':ct_cost,'ce':ce,'efeito':effect,'xp':xp_cost,'adquirida':adquirida,'equipada':owned.get(sid,False),'visivel':adquirida or ct>=ct_cost,'ct_suficiente':ct>=ct_cost,'xp_suficiente':xp>=xp_cost})
+    c.close();return jsonify(skills=out,xp=xp,ct=ct)
+
+@app.post('/api/skills/<skill_id>/buy')
+def buy_skill(skill_id):
+    u,err=require_user()
+    if err:return err
+    sk=skill_dict(skill_id)
+    if not sk:return jsonify(error='Skill inválida.'),404
+    c=db(); process_until_yesterday(c,u)
+    if c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone():
+        c.close();return jsonify(error='Você já possui essa skill.'),400
+    ct=current_ct(c,u['id'])
+    if ct < sk['ct']:
+        c.close();return jsonify(error=f'Você precisa de {sk["ct"]} CT para comprar esta skill. Seu CT atual é {ct:.2f}.'),400
+    row=c.execute('SELECT xp FROM player_xp WHERE user_id=?',(u['id'],)).fetchone(); xp=int(row['xp']) if row else 0
+    if xp < sk['xp']:
+        c.close();return jsonify(error=f'XP insuficiente. Esta skill custa {sk["xp"]} XP e você tem {xp} XP.'),400
+    c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES (?,?,0)',(u['id'],skill_id))
+    c.execute('UPDATE player_xp SET xp=xp-? WHERE user_id=?',(sk['xp'],u['id']))
+    c.commit(); novo=xp-sk['xp'];c.close();return jsonify(ok=True,xp=novo,skill=sk)
 
 @app.post('/api/skills/<skill_id>/toggle')
 def toggle_skill(skill_id):
@@ -232,8 +272,9 @@ def toggle_skill(skill_id):
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Skill não encontrada.'),404
     c=db();row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
-    if row:c.execute('UPDATE user_skills SET equipped=? WHERE user_id=? AND skill_id=?',(0 if row['equipped'] else 1,u['id'],skill_id))
-    else:c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,1)',(u['id'],skill_id))
+    if not row:
+        c.close();return jsonify(error='Compre esta skill primeiro.'),400
+    c.execute('UPDATE user_skills SET equipped=? WHERE user_id=? AND skill_id=?',(0 if row['equipped'] else 1,u['id'],skill_id))
     # CT cap
     total=sum(next(x[3] for x in SKILLS if x[0]==r['skill_id']) for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],)))
     c.rollback() if total>current_ct(c,u['id']) else c.commit()
@@ -326,7 +367,12 @@ def battle_action(bid):
     except:log=[]
     log.append(msg)
     status='active';turn=opp
-    if ohp<=0:status='finished';turn=u['id'];log.append(f'{u["username"]} venceu o combate!')
+    if ohp<=0:
+        status='finished';turn=u['id'];log.append(f'{u["username"]} venceu o combate!')
+        c.execute('INSERT OR IGNORE INTO player_xp(user_id,xp) VALUES (?,0)',(u['id'],))
+        c.execute('INSERT OR IGNORE INTO player_xp(user_id,xp) VALUES (?,0)',(opp,))
+        c.execute('UPDATE player_xp SET xp=xp+100 WHERE user_id=?',(u['id'],))
+        c.execute('UPDATE player_xp SET xp=xp+25 WHERE user_id=?',(opp,))
     if me1:c.execute('UPDATE battles SET hp1=?,ce1=?,hp2=?,turn_user=?,status=?,log_json=? WHERE id=?',(myhp,myce,ohp,turn,status,json.dumps(log),bid))
     else:c.execute('UPDATE battles SET hp2=?,ce2=?,hp1=?,turn_user=?,status=?,log_json=? WHERE id=?',(myhp,myce,ohp,turn,status,json.dumps(log),bid))
     c.commit();c.close();return jsonify(ok=True)

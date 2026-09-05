@@ -1251,13 +1251,16 @@ async function abrirSkills(){
     const data=await api('/api/skills');
     const cats={elementar:'🔥 ELEMENTARES',reforco:'🛡️ REFORÇOS',enfraquecimento:'☠️ ENFRAQUECIMENTOS'};
     box.innerHTML=Object.entries(cats).map(([cat,title])=>{
-      const items=data.skills.filter(x=>x.categoria===cat);
-      return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> por uso</div><div class="skill-effect">${x.efeito}</div><button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button></div>`).join('')}</div></div>`;
+      const items=data.skills.filter(x=>x.categoria===cat && x.visivel);
+      if(!items.length)return '';
+      return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> por uso • XP: <b>${x.xp}</b></div><div class="skill-effect">${x.efeito}</div>${x.adquirida?`<button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button>`:`<button class="main-btn purple-btn" onclick="comprarSkill('${x.id}')" ${x.xp_suficiente?'':'disabled'}>COMPRAR — ${x.xp} XP</button>`}</div>`).join('')}</div></div>`;
     }).join('');
     const eq=data.skills.filter(x=>x.equipada).reduce((n,x)=>n+x.ct,0);
-    document.getElementById('skillResumo').textContent=`${data.skills.filter(x=>x.adquirida).length}/${data.skills.length} disponíveis • ${eq.toFixed(2)} CT equipados`;
+    const liberadas=data.skills.filter(x=>!x.adquirida && x.visivel).length;
+    document.getElementById('skillResumo').textContent=`XP: ${data.xp} • CT: ${data.ct.toFixed(2)} • ${data.skills.filter(x=>x.adquirida).length} compradas • ${liberadas} liberadas para compra • ${eq.toFixed(2)} CT equipados`;
   }catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
+async function comprarSkill(id){if(!confirm('Comprar esta skill com XP?'))return;try{await api('/api/skills/'+encodeURIComponent(id)+'/buy',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
 async function alternarSkill(id){try{await api('/api/skills/'+encodeURIComponent(id)+'/toggle',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
 function abrirCombate(){mostrarPagina('paginaCombate');carregarCombate();}
 async function carregarCombate(){
