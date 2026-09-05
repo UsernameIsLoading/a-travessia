@@ -1,5 +1,5 @@
 import os, sqlite3
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, send_file, request, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +49,10 @@ def user_payload(u):
     return {'tarefas':tasks,'streaks':s,'personagem':char}
 
 @app.get('/')
-def index(): return render_template('index.html')
+def index():
+    # Serve the frontend directly from the project root. This avoids deployment
+    # problems if the GitHub web uploader does not preserve the templates folder.
+    return send_file(os.path.join(BASE_DIR, 'index.html'))
 
 @app.post('/api/register')
 def register():
