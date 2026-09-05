@@ -483,6 +483,24 @@ button{cursor:pointer}
   .leaderboard-streak{font-size:16px}
 }
 
+
+.frequency-box{grid-column:1/-1;border:1px solid rgba(255,255,255,.12);padding:12px;margin-top:2px}
+.frequency-title{font-size:11px;font-weight:800;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:10px}
+.frequency-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.frequency-days label{cursor:pointer;text-align:center;font-size:11px;font-weight:800}
+.frequency-days input{display:none}
+.frequency-days span{display:block;padding:9px 3px;border:1px solid rgba(255,255,255,.12);background:#09090d}
+.frequency-days input:checked+span{border-color:var(--azul2);box-shadow:0 0 0 1px var(--azul2);color:white}
+.task-frequency{display:block;color:#999;font-size:10px;margin-top:5px}
+.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.profile-stat{border:1px solid rgba(255,255,255,.1);padding:16px;background:rgba(5,5,10,.65)}
+.profile-stat h3{margin:0 0 8px;font-size:12px;letter-spacing:1px}
+.profile-stat .big{font-size:28px;font-weight:900}
+.status-table{width:100%;border-collapse:collapse;margin-top:18px}
+.status-table th,.status-table td{padding:12px 8px;border-bottom:1px solid rgba(255,255,255,.09);text-align:center}
+.status-table th{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px}
+.profile-note{color:#999;font-size:12px;line-height:1.5;margin-top:14px}
+@media(max-width:600px){.frequency-days{grid-template-columns:repeat(4,1fr)}.profile-grid{grid-template-columns:1fr}}
 </style>
 
 <style>
@@ -693,6 +711,29 @@ button{cursor:pointer}
   </section>
 </div>
 
+<div id="paginaPerfil" class="page hidden">
+  <div class="topbar">
+    <h1 class="logo">PERFIL</h1>
+    <p class="subtitle">Seu personagem • Seus status</p>
+  </div>
+  <section class="panel">
+    <div class="todos-head"><div><h1 id="perfilUsuario">—</h1><p>Os status usam seus atributos e os dias de tarefas cumpridas.</p></div></div>
+    <div class="profile-grid">
+      <div class="profile-stat"><h3 class="red-text">HP</h3><div class="big" id="perfilHP">—</div></div>
+      <div class="profile-stat"><h3 class="red-text">ATK</h3><div class="big" id="perfilATK">—</div></div>
+      <div class="profile-stat"><h3 class="purple-text">CE</h3><div class="big" id="perfilCE">—</div></div>
+      <div class="profile-stat"><h3 class="blue-text">CT</h3><div class="big" id="perfilCT">—</div></div>
+    </div>
+    <table class="status-table"><thead><tr><th>Atributo</th><th>Base</th><th>Voto</th><th>Efetivo</th><th>Dias</th></tr></thead><tbody>
+      <tr><td class="red-text">Corpo</td><td id="perfilBody">0</td><td id="perfilVotoBody">+0</td><td id="perfilEfBody">0</td><td id="perfilDiasBody">0</td></tr>
+      <tr><td class="blue-text">Mente</td><td id="perfilMind">0</td><td id="perfilVotoMind">+0</td><td id="perfilEfMind">0</td><td id="perfilDiasMind">0</td></tr>
+      <tr><td class="purple-text">Alma</td><td id="perfilSoul">0</td><td id="perfilVotoSoul">+0</td><td id="perfilEfSoul">0</td><td id="perfilDiasSoul">0</td></tr>
+    </tbody></table>
+    <p class="profile-note">F(atributo, dias) = 30 / ((1 + atributo/10) × dias + 30). Um Voto Vinculativo cumprido vale +0,5 no atributo correspondente. Os to-dos precisam ser marcados novamente a cada dia.</p>
+    <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA TAREFAS</button><button class="main-btn purple-btn" onclick="abrirPerfil()">ATUALIZAR</button></div>
+  </section>
+</div>
+
 <div id="paginaLeaderboard" class="page hidden">
   <div class="topbar">
     <h1 class="logo">LEADERBOARD</h1>
@@ -703,7 +744,7 @@ button{cursor:pointer}
     <div class="todos-head">
       <div>
         <h1>Streaks</h1>
-        <p>Ranking de todos os usuários deste navegador.</p>
+        <p>Ranking compartilhado entre todos os jogadores.</p>
       </div>
       <button class="main-btn blue-btn add-btn" type="button" onclick="atualizarLeaderboard()">ATUALIZAR</button>
     </div>
@@ -755,6 +796,18 @@ button{cursor:pointer}
         <option value="todo">To-Do</option>
         <option value="voto">Voto Vinculativo</option>
       </select>
+      <div class="frequency-box">
+        <div class="frequency-title">Frequência semanal</div>
+        <div class="frequency-days">
+          <label><input type="checkbox" value="0" checked><span>SEG</span></label>
+          <label><input type="checkbox" value="1" checked><span>TER</span></label>
+          <label><input type="checkbox" value="2" checked><span>QUA</span></label>
+          <label><input type="checkbox" value="3" checked><span>QUI</span></label>
+          <label><input type="checkbox" value="4" checked><span>SEX</span></label>
+          <label><input type="checkbox" value="5" checked><span>SÁB</span></label>
+          <label><input type="checkbox" value="6" checked><span>DOM</span></label>
+        </div>
+      </div>
       <button id="adicionar" class="main-btn red-btn add-btn" onclick="adicionarTarefa()">ADICIONAR</button>
     </div>
 
@@ -784,6 +837,7 @@ button{cursor:pointer}
     <div class="footer-actions">
       <button class="main-btn blue-btn" onclick="voltarPagina2()">← VOLTAR</button>
       <button class="main-btn purple-btn" onclick="abrirLeaderboard()">🏆 LEADERBOARD</button>
+      <button class="main-btn blue-btn" onclick="abrirPerfil()">👤 PERFIL</button>
     </div>
   </section>
 </div>
@@ -862,53 +916,36 @@ function voltarPagina2(){
   mostrarPagina("pagina2");
 }
 
+function diasSelecionados(){
+  return [...document.querySelectorAll('.frequency-days input:checked')].map(x=>Number(x.value));
+}
+function nomesDias(freq){
+  const n=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
+  return (freq||[]).map(i=>n[i]).join(', ');
+}
 function adicionarTarefa(){
-  const input=document.getElementById("novaTarefa");
-  const classe=document.getElementById("classeTarefa").value;
-  const tipo=document.getElementById("tipoTarefa").value;
+  const input=document.getElementById('novaTarefa');
+  const classe=document.getElementById('classeTarefa').value;
+  const tipo=document.getElementById('tipoTarefa').value;
   const texto=input.value.trim();
-
-  if(!texto){alert("Digite uma tarefa.");return;}
-  if(tarefas.length>=6){alert("Você já possui os 6 espaços de tarefa.");return;}
-  if(tarefas.some(t=>t.classe===classe && (t.tipo||"todo")===tipo)){
-    const nome = tipo==="voto" ? "Voto Vinculativo" : "To-Do";
-    alert(`Essa classe já possui um ${nome}. Escolha outra classe.`);
-    return;
+  const frequencia=diasSelecionados();
+  if(!texto){alert('Digite uma tarefa.');return;}
+  if(!frequencia.length){alert('Escolha pelo menos um dia da semana.');return;}
+  if(tarefas.length>=6){alert('Você já possui os 6 espaços de tarefa.');return;}
+  if(tarefas.some(t=>t.classe===classe && (t.tipo||'todo')===tipo)){
+    const nome=tipo==='voto'?'Voto Vinculativo':'To-Do'; alert(`Essa classe já possui um ${nome}. Escolha outra classe.`); return;
   }
-
-  tarefas.push({
-    id:Date.now(),
-    texto:texto,
-    classe:classe,
-    tipo:tipo,
-    concluida:false
-  });
-
-  input.value="";
-  salvarTarefas();
-  atualizarListaTarefas();
+  tarefas.push({id:null,texto,classe,tipo,frequencia,concluida:false});
+  input.value='';
+  salvarTarefas().then(sincronizarDadosServidor).then(atualizarListaTarefas);
 }
-
-function concluirTarefa(indice){
-  const tarefa=tarefas[indice];
-  if(!tarefa)return;
-
-  if(!tarefa.concluida){
-    tarefa.concluida=true;
-    atualizarStreak(tarefa.classe);
-  }else{
-    tarefa.concluida=false;
-  }
-
-  salvarTarefas();
-  salvarStreaks();
-  atualizarListaTarefas();
+async function concluirTarefa(indice){
+  const tarefa=tarefas[indice]; if(!tarefa || !tarefa.id)return;
+  try{ await api(`/api/tasks/${tarefa.id}/complete`,{method:'POST'}); await sincronizarDadosServidor(); atualizarListaTarefas(); }
+  catch(e){alert(e.message);}
 }
-
 function excluirTarefa(indice){
-  tarefas.splice(indice,1);
-  salvarTarefas();
-  atualizarListaTarefas();
+  tarefas.splice(indice,1); salvarTarefas().then(sincronizarDadosServidor).then(atualizarListaTarefas);
 }
 
 function nomeClasse(classe){
@@ -920,47 +957,17 @@ function nomeTipo(tipo){
 }
 
 function atualizarListaTarefas(){
-  const lista=document.getElementById("listaTarefas");
-  lista.innerHTML="";
-
+  const lista=document.getElementById('listaTarefas'); lista.innerHTML='';
   tarefas.forEach((tarefa,indice)=>{
-    const item=document.createElement("div");
-    item.className="task "+tarefa.classe;
-
-    const checkbox=document.createElement("input");
-    checkbox.type="checkbox";
-    checkbox.checked=tarefa.concluida;
-    checkbox.onclick=()=>concluirTarefa(indice);
-
-    const texto=document.createElement("div");
-    texto.className="task-text"+(tarefa.concluida?" done":"");
-    texto.innerHTML="";
-    const titulo=document.createElement("span");
-    titulo.textContent=tarefa.texto;
-    texto.appendChild(titulo);
-
-    const badge=document.createElement("span");
-    badge.className="badge";
-    badge.textContent=nomeTipo(tarefa.tipo);
-    if(tarefa.classe==="corpo")badge.style.color="var(--vermelho2)";
-    if(tarefa.classe==="mente")badge.style.color="var(--azul2)";
-    if(tarefa.classe==="alma")badge.style.color="var(--roxo2)";
-    texto.appendChild(badge);
-
-    const actions=document.createElement("div");
-    actions.className="task-actions";
-    const excluir=document.createElement("button");
-    excluir.textContent="EXCLUIR";
-    excluir.onclick=()=>excluirTarefa(indice);
-    actions.appendChild(excluir);
-
-    item.appendChild(checkbox);
-    item.appendChild(texto);
-    item.appendChild(actions);
-    lista.appendChild(item);
-  });
-
-  atualizarOpcoesClasse();
+    const item=document.createElement('div'); item.className='task '+tarefa.classe;
+    const checkbox=document.createElement('input'); checkbox.type='checkbox'; checkbox.checked=!!tarefa.concluida; checkbox.disabled=!tarefa.id; checkbox.onclick=()=>concluirTarefa(indice);
+    const texto=document.createElement('div'); texto.className='task-text'+(tarefa.concluida?' done':'');
+    const titulo=document.createElement('span'); titulo.textContent=tarefa.texto; texto.appendChild(titulo);
+    const badge=document.createElement('span'); badge.className='badge'; badge.textContent=nomeTipo(tarefa.tipo); texto.appendChild(badge);
+    const freq=document.createElement('small'); freq.className='task-frequency'; freq.textContent='Dias: '+nomesDias(tarefa.frequencia); texto.appendChild(freq);
+    const actions=document.createElement('div'); actions.className='task-actions'; const excluir=document.createElement('button'); excluir.textContent='EXCLUIR'; excluir.onclick=()=>excluirTarefa(indice); actions.appendChild(excluir);
+    item.appendChild(checkbox); item.appendChild(texto); item.appendChild(actions); lista.appendChild(item);
+  }); atualizarOpcoesClasse();
 }
 
 function atualizarOpcoesClasse(){
@@ -1030,7 +1037,7 @@ function verStreak(){
 
 async function salvarTarefas(){
   if(!usuarioLogado)return;
-  try{await api("/api/tasks",{method:"PUT",body:JSON.stringify({tarefas})});}catch(e){console.error(e);}
+  try{await api('/api/tasks',{method:'PUT',body:JSON.stringify({tarefas})});}catch(e){console.error(e);}
 }
 
 async function salvarStreaks(){
@@ -1167,6 +1174,31 @@ async function atualizarLeaderboard(){
       </tr>`;
     }).join("");
   }catch(e){tbody.innerHTML='<tr><td colspan="6" class="leaderboard-empty">Não foi possível carregar o ranking.</td></tr>';}
+}
+
+async function abrirPerfil(){
+  mostrarPagina('paginaPerfil');
+  try{
+    const p=await api('/api/profile');
+    document.getElementById('perfilUsuario').textContent=p.usuario;
+    const a=p.atributos, d=p.dias;
+    const fmt=n=>Number(n).toFixed(2).replace('.',',');
+    document.getElementById('perfilBody').textContent=fmt(a.body);
+    document.getElementById('perfilMind').textContent=fmt(a.mind);
+    document.getElementById('perfilSoul').textContent=fmt(a.soul);
+    for(const c of ['body','mind','soul']){
+      const k=c==='body'?'Corpo':c==='mind'?'Mente':'Alma';
+      const id=c==='body'?'Body':c==='mind'?'Mind':'Soul';
+      const base=Number(a[c]); const voto=Math.max(0,base-Math.floor(base));
+      document.getElementById('perfilVoto'+id).textContent='+'+fmt(voto);
+      document.getElementById('perfilEf'+id).textContent=fmt(base);
+      document.getElementById('perfilDias'+id).textContent=d[c==='body'?'corpo':c==='mind'?'mente':'alma'];
+    }
+    document.getElementById('perfilHP').textContent=fmt(p.stats.HP);
+    document.getElementById('perfilATK').textContent=fmt(p.stats.ATK);
+    document.getElementById('perfilCE').textContent=fmt(p.stats.CE);
+    document.getElementById('perfilCT').textContent=fmt(p.stats.CT);
+  }catch(e){alert(e.message);}
 }
 
 async function logout(){
