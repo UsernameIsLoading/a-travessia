@@ -5,12 +5,13 @@ try:
 except ImportError:
     psycopg2 = None
 from datetime import date, timedelta
-from flask import Flask, send_file, request, jsonify, session
+from flask import Flask, send_file, request, jsonify, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, 'travessia.db'))
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '1984')
 if not DATABASE_URL:
     os.makedirs(os.path.dirname(DB_PATH) or BASE_DIR, exist_ok=True)
 
@@ -112,6 +113,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS battles(id SERIAL PRIMARY KEY,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 DOUBLE PRECISION,ce1 DOUBLE PRECISION,hp2 DOUBLE PRECISION,ce2 DOUBLE PRECISION,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
     else:
         c.executescript('''
@@ -125,6 +127,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
         cols=[r['name'] for r in c.execute('PRAGMA table_info(tasks)')]
         if 'frequency_json' not in cols: c.execute("ALTER TABLE tasks ADD COLUMN frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]'")
@@ -209,6 +212,7 @@ def index():return send_file(os.path.join(BASE_DIR,'index.html'))
 @app.post('/api/register')
 def register():
     d=request.get_json(silent=True) or {}; username=str(d.get('usuario','')).strip(); password=str(d.get('senha',''))
+    if username.upper()=='ADMIN':return jsonify(error='Esse usuário é reservado para o administrador.'),403
     if not 3<=len(username)<=40:return jsonify(error='O usuário precisa ter entre 3 e 40 caracteres.'),400
     if not all(x.isalnum() or x in '_.-' for x in username):return jsonify(error='Use apenas letras, números, ponto, hífen ou underline.'),400
     if len(password)<4:return jsonify(error='A senha precisa ter pelo menos 4 caracteres.'),400
@@ -226,13 +230,88 @@ def register():
 @app.post('/api/login')
 def login():
     d=request.get_json(silent=True) or {}; username=str(d.get('usuario','')).strip(); password=str(d.get('senha',''))
+    # Acesso administrativo separado da tabela de jogadores.
+    if username.upper()=='ADMIN' and password==ADMIN_PASSWORD:
+        session.clear();session['admin']=True;session.permanent=True
+        return jsonify(ok=True,usuario='ADMIN',admin=True)
     c=db();u=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(username,)).fetchone();c.close()
     if not u or not check_password_hash(u['password_hash'],password):return jsonify(error='Usuário ou senha incorretos.'),401
-    session.clear();session['user_id']=u['id'];session.permanent=True;return jsonify(ok=True,usuario=u['username'])
+    session.clear();session['user_id']=u['id'];session.permanent=True;return jsonify(ok=True,usuario=u['username'],admin=False)
 
 @app.get('/api/me')
 def me():
-    u=current_user();return jsonify(autenticado=bool(u),usuario=u['username'] if u else None)
+    u=current_user();return jsonify(autenticado=bool(u or session.get('admin')),usuario='ADMIN' if session.get('admin') else (u['username'] if u else None),admin=bool(session.get('admin')))
+
+def require_admin():
+    if not session.get('admin'):
+        return False,(jsonify(error='Acesso administrativo necessário.'),403)
+    return True,None
+
+def admin_delete_user(c, uid):
+    c.execute('DELETE FROM battles WHERE player1=? OR player2=?',(uid,uid))
+    c.execute('DELETE FROM users WHERE id=?',(uid,))
+
+def sql_literal(v):
+    if v is None:return 'NULL'
+    if isinstance(v,bool):return 'TRUE' if v else 'FALSE'
+    if isinstance(v,(int,float)):return str(v)
+    return "'"+str(v).replace("'","''")+"'"
+
+@app.get('/api/admin/users')
+def admin_users():
+    ok,err=require_admin()
+    if not ok:return err
+    c=db(); rows=c.execute('SELECT id,username,created_at,xp FROM users ORDER BY username').fetchall();c.close()
+    return jsonify([{'id':r['id'],'usuario':r['username'],'criado_em':str(r['created_at']),'xp':int(r['xp'] or 0)} for r in rows])
+
+@app.delete('/api/admin/users/<int:uid>')
+def admin_delete_user_route(uid):
+    ok,err=require_admin()
+    if not ok:return err
+    c=db(); row=c.execute('SELECT username FROM users WHERE id=?',(uid,)).fetchone()
+    if not row:c.close();return jsonify(error='Usuário não encontrado.'),404
+    if str(row['username']).upper()=='ADMIN':c.close();return jsonify(error='A conta ADMIN não pode ser apagada.'),400
+    admin_delete_user(c,uid);c.commit();c.close();return jsonify(ok=True)
+
+@app.get('/api/admin/export-sql')
+def admin_export_sql():
+    ok,err=require_admin()
+    if not ok:return err
+    if not DATABASE_URL:return jsonify(error='Exportação SQL administrativa está disponível para PostgreSQL.'),400
+    tables=['users','characters','tasks','completions','streaks','vote_bonuses','user_skills','battles','hunts','entity_battles','pvp_daily']
+    c=db(); lines=['-- A Travessia PostgreSQL backup','-- Gerado pelo painel ADM','-- Importe somente em uma base do A Travessia.','','TRUNCATE TABLE '+', '.join(tables)+' CASCADE;']
+    for table in tables:
+        rows=c.execute(f'SELECT * FROM {table}').fetchall()
+        if not rows:continue
+        cols=list(rows[0].keys())
+        colsql=', '.join(cols)
+        for r in rows:
+            vals=', '.join(sql_literal(r[col]) for col in cols)
+            lines.append(f'INSERT INTO {table} ({colsql}) VALUES ({vals});')
+    for table in ['users','tasks','battles','entity_battles']:
+        lines.append(f"SELECT setval(pg_get_serial_sequence('{table}','id'), COALESCE(MAX(id),1), MAX(id) IS NOT NULL) FROM {table};")
+    c.close(); sql='\n'.join(lines)+'\n'
+    return Response(sql,mimetype='application/sql',headers={'Content-Disposition':'attachment; filename=travessia_backup.sql'})
+
+@app.post('/api/admin/import-sql')
+def admin_import_sql():
+    ok,err=require_admin()
+    if not ok:return err
+    if not DATABASE_URL:return jsonify(error='Importação SQL administrativa está disponível para PostgreSQL.'),400
+    f=request.files.get('arquivo')
+    if not f:return jsonify(error='Selecione um arquivo .sql.'),400
+    raw=f.read()
+    if len(raw)>20*1024*1024:return jsonify(error='Arquivo SQL grande demais. Limite: 20 MB.'),413
+    try: sql=raw.decode('utf-8-sig')
+    except UnicodeDecodeError:return jsonify(error='O arquivo precisa estar em UTF-8.'),400
+    c=db()
+    try:
+        c.cur.execute(sql)
+        c.commit()
+    except Exception as e:
+        c.rollback();c.close();return jsonify(error='Falha ao importar SQL: '+str(e)),400
+    c.close();return jsonify(ok=True,mensagem='Banco restaurado com sucesso. Atualize a página.')
+
 @app.delete('/api/account')
 def delete_account():
     u,err=require_user()
@@ -463,6 +542,14 @@ def entity_battle_action(bid):
         if hp<=0: log.append('Você foi derrotado.');
     c.execute('UPDATE entity_battles SET hp_player=?,ce_player=?,hp_entity=?,status=?,turn=?,log_json=? WHERE id=?',(hp,ce,ehp,status,turn,json.dumps(log,ensure_ascii=False),bid));c.commit();c.close();return jsonify(ok=True)
 
+@app.get('/api/pvp-status')
+def pvp_status():
+    u,err=require_user()
+    if err:return err
+    c=db(); row=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone(); c.close()
+    used=int(row['count']) if row else 0
+    return jsonify(usados=min(used,2),restantes=max(0,2-used))
+
 @app.get('/api/battles')
 def list_battles():
     u,err=require_user()
@@ -479,9 +566,16 @@ def create_battle():
     name=str((request.get_json(silent=True) or {}).get('oponente','')).strip();c=db();opp=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(name,)).fetchone()
     if not opp:c.close();return jsonify(error='Adversário não encontrado.'),404
     if opp['id']==u['id']:c.close();return jsonify(error='Você não pode desafiar a si mesmo.'),400
+    day=iso(today())
+    my_count=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(u['id'],day)).fetchone()
+    opp_count=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(opp['id'],day)).fetchone()
+    if my_count and int(my_count['count'])>=2:c.close();return jsonify(error='Você já atingiu o limite de 2 combates PvP hoje.'),400
+    if opp_count and int(opp_count['count'])>=2:c.close();return jsonify(error='Esse jogador já atingiu o limite de 2 combates PvP hoje.'),400
     s1=battle_stats(c,u['id']);s2=battle_stats(c,opp['id'])
     bid=insert_and_get_id(c, 'INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?)',(u['id'],opp['id'],u['id'],'active',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps([f'{u["username"]} iniciou o combate.'])))
-    c.commit();c.close();return jsonify(id=bid)
+    for uid in (u['id'],opp['id']):
+        c.execute('INSERT INTO pvp_daily(user_id,day,count) VALUES(?,?,1) ON CONFLICT(user_id,day) DO UPDATE SET count=pvp_daily.count+1',(uid,day))
+    c.commit();c.close();return jsonify(id=bid,combates_restantes=max(0,1-(int(my_count['count']) if my_count else 0)))
 
 @app.get('/api/battles/<int:bid>')
 def get_battle(bid):

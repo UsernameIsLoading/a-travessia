@@ -612,6 +612,36 @@ button{cursor:pointer}
   </section>
 </div>
 
+<div id="paginaAdmin" class="page hidden">
+  <div class="topbar">
+    <h1 class="logo">PAINEL ADM</h1>
+    <p class="subtitle">Administração • Backup • Jogadores</p>
+  </div>
+  <section class="panel">
+    <div class="todos-head">
+      <div><h1>Banco de dados</h1><p>Faça backup dos dados ou restaure um arquivo SQL.</p></div>
+    </div>
+    <div class="skill-card">
+      <h2>💾 Backup SQL</h2>
+      <p>Baixe todos os dados do PostgreSQL em um arquivo SQL. Guarde esse arquivo fora do Render.</p>
+      <button class="main-btn blue-btn" type="button" onclick="baixarBackupSQL()">⬇️ BAIXAR BACKUP SQL</button>
+    </div>
+    <div class="skill-card">
+      <h2>📤 Restaurar banco</h2>
+      <p style="color:var(--vermelho2);"><b>ATENÇÃO:</b> a restauração substitui os dados atuais do banco. Use apenas um backup confiável do A Travessia.</p>
+      <input id="adminSqlFile" type="file" accept=".sql,text/sql,application/sql" style="margin:10px 0;width:100%;">
+      <button class="main-btn purple-btn" type="button" onclick="restaurarBackupSQL()">📥 RESTAURAR SQL</button>
+    </div>
+    <div class="skill-card">
+      <div class="todos-head"><div><h2>👥 Jogadores</h2><p id="adminResumo">Carregando...</p></div><button class="main-btn blue-btn" type="button" onclick="carregarAdmin()">ATUALIZAR</button></div>
+      <div id="adminUsers"></div>
+    </div>
+    <div class="footer-actions">
+      <button class="main-btn red-btn" type="button" onclick="logout()">SAIR DO ADM</button>
+    </div>
+  </section>
+</div>
+
 <div id="pagina1" class="page">
   <div class="topbar">
     <h1 class="logo">A TRAVESSIA</h1>
@@ -1094,7 +1124,9 @@ function mostrarAuth(tipo){
 }
 
 async function api(url, options={}){
-  const res=await fetch(url, {credentials:"same-origin",headers:{"Content-Type":"application/json",...(options.headers||{})}, ...options});
+  const headers={...(options.headers||{})};
+  if(!(options.body instanceof FormData) && !headers["Content-Type"]) headers["Content-Type"]="application/json";
+  const res=await fetch(url, {credentials:"same-origin",...options,headers});
   let data={};
   try{data=await res.json();}catch(e){}
   if(!res.ok) throw new Error(data.error||"Erro de comunicação com o servidor.");
@@ -1150,6 +1182,11 @@ async function login(){
   try{
     const data=await api("/api/login",{method:"POST",body:JSON.stringify({usuario,senha})});
     usuarioLogado=data.usuario;
+    if(data.admin){
+      mostrarPagina('paginaAdmin');
+      await carregarAdmin();
+      return;
+    }
     const usuarioAtualEl=document.getElementById("usuarioAtual");
     if(usuarioAtualEl) usuarioAtualEl.textContent=usuarioLogado;
     const temPersonagem=await sincronizarDadosServidor();
@@ -1273,7 +1310,12 @@ async function alternarSkill(id){try{await api('/api/skills/'+encodeURIComponent
 function abrirCombate(){mostrarPagina('paginaCombate');carregarCombate();carregarCaca();}
 async function carregarCombate(){
   const box=document.getElementById('combateBox');
-  try{const r=await api('/api/battles'); if(!r.length){box.innerHTML='<p>Nenhum combate PvP ativo.</p>';return;} box.innerHTML=r.map(b=>`<div class="skill-card"><h3>${escaparXml(b.oponente)}</h3><p>Seu HP: ${b.seu_hp.toFixed(1)} • CE: ${b.seu_ce.toFixed(1)}</p><button class="main-btn red-btn" onclick="abrirBatalha(${b.id})">CONTINUAR</button></div>`).join('');}catch(e){box.innerHTML=`<p>${e.message}</p>`;}
+  try{
+    const [r,status]=await Promise.all([api('/api/battles'),api('/api/pvp-status')]);
+    const aviso=`<div class="skill-card"><h3>⚔ PvP diário</h3><p>Você já participou de <b>${status.usados}</b>/2 combates hoje. Restam <b>${status.restantes}</b>.</p></div>`;
+    if(!r.length){box.innerHTML=aviso+'<p>Nenhum combate PvP ativo.</p>';return;}
+    box.innerHTML=aviso+r.map(b=>`<div class="skill-card"><h3>${escaparXml(b.oponente)}</h3><p>Seu HP: ${b.seu_hp.toFixed(1)} • CE: ${b.seu_ce.toFixed(1)}</p><button class="main-btn red-btn" onclick="abrirBatalha(${b.id})">CONTINUAR</button></div>`).join('');
+  }catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
 async function carregarCaca(){
   const box=document.getElementById('cacaBox'), btn=document.getElementById('botaoCacar');
@@ -1305,6 +1347,29 @@ async function abrirBatalha(id){
   try{const b=await api('/api/battles/'+id); const souEu=b.meu_turno; const skills=(b.skills||[]); box.innerHTML=`<div class="skill-card"><h2>${escaparXml(b.jogador1)} ${b.status==='active'?'⚔':'🏁'} ${escaparXml(b.jogador2)}</h2><p>${escaparXml(b.log.join(' • '))}</p><p><b>Você:</b> HP ${b.seu_hp.toFixed(1)} / CE ${b.seu_ce.toFixed(1)} &nbsp; | &nbsp; <b>Adversário:</b> HP ${b.inimigo_hp.toFixed(1)}</p>${souEu&&b.status==='active'?`<button class="main-btn blue-btn" onclick="acaoBatalha(${id},null)">ATAQUE BÁSICO (1d4)</button>${skills.map(s=>`<button class="main-btn purple-btn" onclick="acaoBatalha(${id},'${s.id}')">${s.nome} — ${s.ce} CE</button>`).join('')}`:'<p>'+ (b.status==='active'?'Aguardando o turno do adversário.':'Combate encerrado.') +'</p>'}<button class="main-btn blue-btn" onclick="carregarCombate()">← COMBATES</button></div>`;}catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
 async function acaoBatalha(id,skill){try{await api('/api/battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalha(id);}catch(e){alert(e.message);}}
+
+async function carregarAdmin(){
+  const box=document.getElementById('adminUsers');
+  try{
+    const users=await api('/api/admin/users');
+    document.getElementById('adminResumo').textContent=`${users.length} jogador(es) cadastrado(s).`;
+    if(!users.length){box.innerHTML='<p>Nenhum jogador cadastrado.</p>';return;}
+    box.innerHTML='<div style="overflow-x:auto;"><table class="leaderboard-table"><thead><tr><th>Usuário</th><th>XP</th><th>Ação</th></tr></thead><tbody>'+users.map(u=>`<tr><td>${escaparXml(u.usuario)}</td><td>${u.xp}</td><td><button class="main-btn red-btn" onclick="adminDeletar(${u.id},'${escaparXml(u.usuario)}')">DELETAR</button></td></tr>`).join('')+'</tbody></table></div>';
+  }catch(e){box.innerHTML=`<p>${e.message}</p>`;}
+}
+async function adminDeletar(id,nome){
+  if(!confirm(`Deletar a conta ${nome}? Isso apaga personagem, tarefas, skills, streaks e combates.`))return;
+  try{await api('/api/admin/users/'+id,{method:'DELETE'});await carregarAdmin();}catch(e){alert(e.message);}
+}
+function baixarBackupSQL(){ window.location.href='/api/admin/export-sql'; }
+async function restaurarBackupSQL(){
+  const input=document.getElementById('adminSqlFile');
+  if(!input.files.length)return alert('Selecione um arquivo SQL.');
+  if(!confirm('ATENÇÃO: isso vai substituir os dados atuais do banco. Continuar?'))return;
+  const fd=new FormData();fd.append('arquivo',input.files[0]);
+  try{const r=await api('/api/admin/import-sql',{method:'POST',body:fd});alert(r.mensagem||'Banco restaurado.');await carregarAdmin();}
+  catch(e){alert(e.message);}
+}
 
 function exportarExcel(){
   if(!usuarioLogado)return;
@@ -1377,6 +1442,7 @@ mostrarPagina("paginaLogin");
     const me=await api("/api/me");
     if(me.autenticado){
       usuarioLogado=me.usuario;
+      if(me.admin){ await carregarAdmin(); mostrarPagina('paginaAdmin'); return; }
       const usuarioAtualEl=document.getElementById("usuarioAtual");
       if(usuarioAtualEl) usuarioAtualEl.textContent=usuarioLogado;
       const temPersonagem=await sincronizarDadosServidor();
