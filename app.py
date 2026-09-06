@@ -1,11 +1,18 @@
 import os, sqlite3, json, secrets
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except ImportError:
+    psycopg2 = None
 from datetime import date, timedelta
 from flask import Flask, send_file, request, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, 'travessia.db'))
-os.makedirs(os.path.dirname(DB_PATH) or BASE_DIR, exist_ok=True)
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+if not DATABASE_URL:
+    os.makedirs(os.path.dirname(DB_PATH) or BASE_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
@@ -53,11 +60,35 @@ def player_xp_reward(player_hp, opponent_hp): return max(0, nearest_int(8 * floa
 def entity_xp_reward(player_hp, monster_hp): return max(0, nearest_int(5 * float(monster_hp) / max(1.0,float(player_hp))))
 
 
+class PostgresDB:
+    def __init__(self, conn):
+        self.conn=conn
+        self.cur=conn.cursor(cursor_factory=RealDictCursor)
+    def execute(self, sql, params=()):
+        self.cur.execute(sql.replace('?', '%s'), params)
+        return self.cur
+    def commit(self): self.conn.commit()
+    def rollback(self): self.conn.rollback()
+    def close(self):
+        try: self.cur.close()
+        finally: self.conn.close()
+    def executescript(self, sql):
+        for statement in sql.split(';'):
+            statement=statement.strip()
+            if statement: self.cur.execute(statement)
+
 def db():
-    c = sqlite3.connect(DB_PATH)
-    c.row_factory = sqlite3.Row
-    c.execute('PRAGMA foreign_keys=ON')
-    return c
+    if DATABASE_URL:
+        if psycopg2 is None: raise RuntimeError('DATABASE_URL está configurada, mas psycopg2-binary não está instalado.')
+        url=DATABASE_URL
+        if 'sslmode=' not in url: url += ('&' if '?' in url else '?') + 'sslmode=require'
+        return PostgresDB(psycopg2.connect(url))
+    c=sqlite3.connect(DB_PATH); c.row_factory=sqlite3.Row; c.execute('PRAGMA foreign_keys=ON'); return c
+
+def insert_and_get_id(c, sql, params):
+    if DATABASE_URL:
+        return c.execute(sql + ' RETURNING id', params).fetchone()['id']
+    return c.execute(sql, params).lastrowid
 
 def today(): return date.today()
 def iso(d): return d.isoformat()
@@ -67,25 +98,40 @@ def parse_days(v):
     except Exception: return list(range(7))
 
 def init_db():
-    c=db(); c.executescript('''
-    CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body REAL NOT NULL DEFAULT 0,mind REAL NOT NULL DEFAULT 0,soul REAL NOT NULL DEFAULT 0,class_name TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS vote_bonuses(user_id INTEGER NOT NULL,class TEXT NOT NULL,bonus REAL NOT NULL DEFAULT 0.5,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
-    CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-    ''')
-    cols=[r['name'] for r in c.execute('PRAGMA table_info(tasks)')]
-    if 'frequency_json' not in cols: c.execute("ALTER TABLE tasks ADD COLUMN frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]'")
-    cols=[r['name'] for r in c.execute('PRAGMA table_info(users)')]
-    if 'last_processed_day' not in cols: c.execute('ALTER TABLE users ADD COLUMN last_processed_day TEXT')
-    # Every existing vote task gets the immediate +0.5 bonus once.
-    for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
-        c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
+    c=db()
+    if DATABASE_URL:
+        c.executescript('''
+        CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
+        CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
+        CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body DOUBLE PRECISION NOT NULL DEFAULT 0,mind DOUBLE PRECISION NOT NULL DEFAULT 0,soul DOUBLE PRECISION NOT NULL DEFAULT 0,class_name TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS tasks(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS vote_bonuses(user_id INTEGER NOT NULL,class TEXT NOT NULL,bonus DOUBLE PRECISION NOT NULL DEFAULT 0.5,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS battles(id SERIAL PRIMARY KEY,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 DOUBLE PRECISION,ce1 DOUBLE PRECISION,hp2 DOUBLE PRECISION,ce2 DOUBLE PRECISION,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
+        CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        ''')
+    else:
+        c.executescript('''
+        CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body REAL NOT NULL DEFAULT 0,mind REAL NOT NULL DEFAULT 0,soul REAL NOT NULL DEFAULT 0,class_name TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS vote_bonuses(user_id INTEGER NOT NULL,class TEXT NOT NULL,bonus REAL NOT NULL DEFAULT 0.5,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
+        CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        ''')
+        cols=[r['name'] for r in c.execute('PRAGMA table_info(tasks)')]
+        if 'frequency_json' not in cols: c.execute("ALTER TABLE tasks ADD COLUMN frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]'")
+        cols=[r['name'] for r in c.execute('PRAGMA table_info(users)')]
+        if 'last_processed_day' not in cols: c.execute('ALTER TABLE users ADD COLUMN last_processed_day TEXT')
+        for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
+            c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
     c.commit(); c.close()
 init_db()
 
@@ -168,16 +214,19 @@ def register():
     if len(password)<4:return jsonify(error='A senha precisa ter pelo menos 4 caracteres.'),400
     c=db()
     try:
-        cur=c.execute('INSERT INTO users(username,password_hash,last_processed_day) VALUES(?,?,?)',(username,generate_password_hash(password),iso(today()-timedelta(days=1)))); uid=cur.lastrowid
+        uid=insert_and_get_id(c, 'INSERT INTO users(username,password_hash,last_processed_day) VALUES(?,?,?)',(username,generate_password_hash(password),iso(today()-timedelta(days=1))))
         for cls in CLASSES:c.execute('INSERT INTO streaks(user_id,class,days,last_day) VALUES(?,?,0,NULL)',(uid,cls))
         c.commit()
-    except sqlite3.IntegrityError:c.rollback();c.close();return jsonify(error='Esse usuário já existe.'),409
+    except Exception as e:
+        if (DATABASE_URL and psycopg2 and isinstance(e, psycopg2.IntegrityError)) or (not DATABASE_URL and isinstance(e, sqlite3.IntegrityError)):
+            c.rollback();c.close();return jsonify(error='Esse usuário já existe.'),409
+        c.rollback();c.close();raise
     c.close();return jsonify(ok=True)
 
 @app.post('/api/login')
 def login():
     d=request.get_json(silent=True) or {}; username=str(d.get('usuario','')).strip(); password=str(d.get('senha',''))
-    c=db();u=c.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone();c.close()
+    c=db();u=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(username,)).fetchone();c.close()
     if not u or not check_password_hash(u['password_hash'],password):return jsonify(error='Usuário ou senha incorretos.'),401
     session.clear();session['user_id']=u['id'];session.permanent=True;return jsonify(ok=True,usuario=u['username'])
 
@@ -214,7 +263,7 @@ def save_tasks():
         if tid and int(tid) in existing:
             tid=int(tid);kept.add(tid);c.execute('UPDATE tasks SET text=?,class=?,type=?,frequency_json=? WHERE id=? AND user_id=?',(text,cls,typ,json.dumps(freq),tid,u['id']))
         else:
-            cur=c.execute('INSERT INTO tasks(user_id,text,class,type,frequency_json) VALUES(?,?,?,?,?)',(u['id'],text,cls,typ,json.dumps(freq)));tid=cur.lastrowid;kept.add(tid)
+            tid=insert_and_get_id(c, 'INSERT INTO tasks(user_id,text,class,type,frequency_json) VALUES(?,?,?,?,?)',(u['id'],text,cls,typ,json.dumps(freq)));kept.add(tid)
     for tid in existing-kept:c.execute('DELETE FROM tasks WHERE id=? AND user_id=?',(tid,u['id']))
     new_votes={r['class'] for r in c.execute("SELECT class FROM tasks WHERE user_id=? AND type='voto'",(u['id'],))}
     for cls in CLASSES:
@@ -366,9 +415,15 @@ def start_entity_battle():
     c=db(); row=c.execute('SELECT entities_json FROM hunts WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone()
     if not row:c.close();return jsonify(error='Use CAÇAR MALDIÇÃO primeiro.'),400
     valid=json.loads(row['entities_json']);
-    if not any(json.dumps(entity,sort_keys=True)==json.dumps(x,sort_keys=True) for x in valid):c.close();return jsonify(error='Essa maldição não pertence à sua caça de hoje.'),400
+    idx=next((i for i,x in enumerate(valid) if json.dumps(entity,sort_keys=True)==json.dumps(x,sort_keys=True)),None)
+    if idx is None:c.close();return jsonify(error='Essa maldição não pertence à sua caça de hoje ou já foi enfrentada.'),400
+    # Cada maldição só pode ser enfrentada uma vez. Removemos da caça no momento
+    # em que o combate é iniciado, então ela não volta a aparecer nem pode ser
+    # iniciada novamente, independentemente de vitória ou derrota.
+    valid.pop(idx)
+    c.execute('UPDATE hunts SET entities_json=? WHERE user_id=? AND day=?',(json.dumps(valid,ensure_ascii=False),u['id'],iso(today())))
     base,bonus,eff,ch=attributes_for(c,u['id']); days=max([int(r['days']) for r in c.execute('SELECT days FROM streaks WHERE user_id=?',(u['id'],))] or [1]); st=stats_for(eff,days)
-    cur=c.execute('INSERT INTO entity_battles(user_id,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json) VALUES(?,?,?,?,?,?,?,?)',(u['id'],json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([]))); bid=cur.lastrowid;c.commit();c.close();return jsonify(id=bid)
+    bid=insert_and_get_id(c, 'INSERT INTO entity_battles(user_id,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json) VALUES(?,?,?,?,?,?,?,?)',(u['id'],json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([])));c.commit();c.close();return jsonify(id=bid)
 
 @app.get('/api/entity-battles/<int:bid>')
 def get_entity_battle(bid):
@@ -421,12 +476,12 @@ def list_battles():
 def create_battle():
     u,err=require_user()
     if err:return err
-    name=str((request.get_json(silent=True) or {}).get('oponente','')).strip();c=db();opp=c.execute('SELECT * FROM users WHERE username=?',(name,)).fetchone()
+    name=str((request.get_json(silent=True) or {}).get('oponente','')).strip();c=db();opp=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(name,)).fetchone()
     if not opp:c.close();return jsonify(error='Adversário não encontrado.'),404
     if opp['id']==u['id']:c.close();return jsonify(error='Você não pode desafiar a si mesmo.'),400
     s1=battle_stats(c,u['id']);s2=battle_stats(c,opp['id'])
-    cur=c.execute('INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?)',(u['id'],opp['id'],u['id'],'active',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps([f'{u["username"]} iniciou o combate.'])))
-    c.commit();bid=cur.lastrowid;c.close();return jsonify(id=bid)
+    bid=insert_and_get_id(c, 'INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?)',(u['id'],opp['id'],u['id'],'active',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps([f'{u["username"]} iniciou o combate.'])))
+    c.commit();c.close();return jsonify(id=bid)
 
 @app.get('/api/battles/<int:bid>')
 def get_battle(bid):
