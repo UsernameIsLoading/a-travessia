@@ -144,7 +144,13 @@ class PostgresDB:
 
 
 def ensure_pvp_challenges(c):
-    c.execute('CREATE TABLE IF NOT EXISTS pvp_challenges(id INTEGER PRIMARY KEY AUTOINCREMENT, challenger_id INTEGER NOT NULL, challenged_id INTEGER NOT NULL, status TEXT NOT NULL DEFAULT \'pending\', created_at TEXT DEFAULT CURRENT_TIMESTAMP, battle_id INTEGER, FOREIGN KEY(challenger_id) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(challenged_id) REFERENCES users(id) ON DELETE CASCADE)')
+    # SQLite e PostgreSQL usam sintaxes diferentes para colunas auto-incrementais.
+    # Além disso, esta tabela referencia users, então ela só deve ser criada
+    # depois do schema base (feito em init_db()).
+    if DATABASE_URL:
+        c.execute('CREATE TABLE IF NOT EXISTS pvp_challenges(id SERIAL PRIMARY KEY,challenger_id INTEGER NOT NULL,challenged_id INTEGER NOT NULL,status TEXT NOT NULL DEFAULT \'pending\',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,battle_id INTEGER,FOREIGN KEY(challenger_id) REFERENCES users(id) ON DELETE CASCADE,FOREIGN KEY(challenged_id) REFERENCES users(id) ON DELETE CASCADE)')
+    else:
+        c.execute('CREATE TABLE IF NOT EXISTS pvp_challenges(id INTEGER PRIMARY KEY AUTOINCREMENT,challenger_id INTEGER NOT NULL,challenged_id INTEGER NOT NULL,status TEXT NOT NULL DEFAULT \'pending\',created_at TEXT DEFAULT CURRENT_TIMESTAMP,battle_id INTEGER,FOREIGN KEY(challenger_id) REFERENCES users(id) ON DELETE CASCADE,FOREIGN KEY(challenged_id) REFERENCES users(id) ON DELETE CASCADE)')
     try: c.execute('CREATE INDEX IF NOT EXISTS pvp_challenges_challenged_status_idx ON pvp_challenges(challenged_id,status)')
     except Exception: pass
 
@@ -153,8 +159,8 @@ def db():
         if psycopg2 is None: raise RuntimeError('DATABASE_URL está configurada, mas psycopg2-binary não está instalado.')
         url=DATABASE_URL
         if 'sslmode=' not in url: url += ('&' if '?' in url else '?') + 'sslmode=require'
-        c=PostgresDB(psycopg2.connect(url)); ensure_pvp_challenges(c); c.commit(); return c
-    c=sqlite3.connect(DB_PATH); c.row_factory=sqlite3.Row; c.execute('PRAGMA foreign_keys=ON'); ensure_pvp_challenges(c); c.commit(); return c
+        return PostgresDB(psycopg2.connect(url))
+    c=sqlite3.connect(DB_PATH); c.row_factory=sqlite3.Row; c.execute('PRAGMA foreign_keys=ON'); return c
 
 def insert_and_get_id(c, sql, params):
     if DATABASE_URL:
@@ -206,6 +212,7 @@ def init_db():
         if 'last_processed_day' not in cols: c.execute('ALTER TABLE users ADD COLUMN last_processed_day TEXT')
         for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
             c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
+    ensure_pvp_challenges(c)
     c.commit(); c.close()
 init_db()
 
