@@ -508,6 +508,31 @@ button{cursor:pointer}
 .skill-tree-box h2{margin:0 0 6px}.skill-tree-box select{width:100%;padding:12px;border-radius:10px;background:#111;color:inherit;border:1px solid rgba(255,255,255,.18)}.skill-tree-note{font-size:.9rem;opacity:.8;margin-top:8px}.skill-tree-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:rgba(130,100,255,.16);font-size:.8rem;margin-bottom:8px}
 
 .skill-shop{display:grid;gap:16px}.skill-group h2{margin:8px 0}.skill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.skill-card{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;background:rgba(255,255,255,.03)}.skill-card h3{margin:0 0 6px}.skill-meta{font-size:.85rem;opacity:.8;margin:6px 0}.skill-effect{min-height:44px}.skill-card button{margin-top:10px}.skill-equipped{outline:2px solid rgba(255,255,255,.35)}
+
+/* ===== NOVO FLUXO: DASHBOARD ===== */
+.dashboard-shell{max-width:1100px;margin:0 auto;padding:0 14px 40px}
+.dashboard-grid{display:grid;grid-template-columns:1.45fr .85fr;gap:16px}
+.dashboard-card{background:linear-gradient(145deg,rgba(18,18,26,.98),rgba(9,9,14,.98));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:22px;box-shadow:0 14px 45px rgba(0,0,0,.22)}
+.dashboard-card h2,.dashboard-card h3{margin-top:0}
+.dashboard-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:18px}
+.dashboard-hero h1{margin:0;font-size:clamp(26px,5vw,42px)}
+.dashboard-hero p{margin:6px 0 0;color:#999}
+.dashboard-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(139,44,255,.35);background:rgba(139,44,255,.08);padding:7px 10px;border-radius:999px;font-size:12px;color:#d8b9ff}
+.dashboard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dashboard-stat{padding:14px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+.dashboard-stat .label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px}.dashboard-stat .value{font-size:23px;font-weight:900;margin-top:5px}
+.dashboard-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.dashboard-actions button{min-height:62px;text-align:left;padding:13px 15px;border-radius:14px}
+.dashboard-section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.dashboard-section-head h2{margin:0}.dashboard-section-head p{margin:3px 0 0;color:#888;font-size:12px}
+.dashboard-form{display:grid;grid-template-columns:1.8fr .8fr .9fr auto;gap:9px;align-items:end}.dashboard-form .frequency-box{grid-column:1/-1}
+.dashboard-list{display:grid;gap:9px;margin-top:14px}.dashboard-empty{padding:18px;text-align:center;color:#777;border:1px dashed rgba(255,255,255,.1);border-radius:13px}
+.dashboard-mission{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:13px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025)}
+.dashboard-mission.corpo{border-left:3px solid var(--vermelho2)}.dashboard-mission.mente{border-left:3px solid var(--azul2)}.dashboard-mission.alma{border-left:3px solid var(--roxo2)}
+.dashboard-mission input{width:20px;height:20px}.dashboard-mission .mission-title{font-weight:800}.dashboard-mission .mission-meta{font-size:11px;color:#777;margin-top:4px}.dashboard-mission.done .mission-title{text-decoration:line-through;opacity:.5}
+.dashboard-voto{padding:15px;border-radius:14px;background:linear-gradient(135deg,rgba(139,44,255,.10),rgba(255,255,255,.025));border:1px solid rgba(139,44,255,.2)}
+.dashboard-voto .voto-title{font-weight:900}.dashboard-voto .voto-bonus{font-size:12px;color:#caa5ff;margin-top:5px}.dashboard-progress{display:grid;gap:10px}.progress-row{display:grid;grid-template-columns:65px 1fr 38px;gap:9px;align-items:center;font-size:12px}.progress-bar{height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}.progress-bar span{display:block;height:100%;width:0;border-radius:99px;background:currentColor}.progress-row.corpo{color:var(--vermelho2)}.progress-row.mente{color:var(--azul2)}.progress-row.alma{color:var(--roxo2)}
+@media(max-width:800px){.dashboard-grid{grid-template-columns:1fr}.dashboard-stats{grid-template-columns:repeat(2,1fr)}.dashboard-form{grid-template-columns:1fr 1fr}.dashboard-form input{grid-column:1/-1}.dashboard-form .frequency-box{grid-column:1/-1}}
+@media(max-width:520px){.dashboard-stats{grid-template-columns:1fr 1fr}.dashboard-actions{grid-template-columns:1fr}.dashboard-form{grid-template-columns:1fr}.dashboard-form input,.dashboard-form .frequency-box{grid-column:auto}}
 </style>
 
 <style>
@@ -644,6 +669,57 @@ button{cursor:pointer}
       <button class="main-btn red-btn" type="button" onclick="logout()">SAIR DO ADM</button>
     </div>
   </section>
+</div>
+
+
+<div id="paginaDashboard" class="page hidden">
+  <div class="topbar">
+    <h1 class="logo">A TRAVESSIA</h1>
+    <p class="subtitle">Sua jornada • Corpo • Mente • Alma</p>
+  </div>
+  <main class="dashboard-shell">
+    <div class="dashboard-hero">
+      <div><h1>Olá, <span id="dashboardUsuario">—</span>.</h1><p>O que você vai conquistar hoje?</p></div>
+      <span id="dashboardTree" class="dashboard-chip">🌳 Técnica não escolhida</span>
+    </div>
+
+    <div class="dashboard-grid">
+      <section class="dashboard-card">
+        <div class="dashboard-section-head"><div><h2>📜 Missões de hoje</h2><p>Objetivos que você escolheu cumprir.</p></div><button class="main-btn red-btn" type="button" onclick="abrirCriacaoMissao('todo')">+ NOVA</button></div>
+        <div id="dashboardMissoes" class="dashboard-list"></div>
+      </section>
+
+      <aside class="dashboard-card">
+        <div class="dashboard-section-head"><div><h2>📈 Progresso</h2><p>Seu ritmo de evolução.</p></div><button class="main-btn purple-btn" type="button" onclick="abrirPerfil()">FICHA</button></div>
+        <div class="dashboard-stats">
+          <div class="dashboard-stat"><div class="label">Corpo</div><div class="value" id="dashCorpo">0</div></div>
+          <div class="dashboard-stat"><div class="label">Mente</div><div class="value" id="dashMente">0</div></div>
+          <div class="dashboard-stat"><div class="label">Alma</div><div class="value" id="dashAlma">0</div></div>
+          <div class="dashboard-stat"><div class="label">XP</div><div class="value" id="dashXP">0</div></div>
+        </div>
+        <div class="dashboard-progress" style="margin-top:16px">
+          <div class="progress-row corpo"><b>Corpo</b><div class="progress-bar"><span id="dashBarCorpo"></span></div><b id="dashStreakCorpo">0</b></div>
+          <div class="progress-row mente"><b>Mente</b><div class="progress-bar"><span id="dashBarMente"></span></div><b id="dashStreakMente">0</b></div>
+          <div class="progress-row alma"><b>Alma</b><div class="progress-bar"><span id="dashBarAlma"></span></div><b id="dashStreakAlma">0</b></div>
+        </div>
+      </aside>
+
+      <section class="dashboard-card">
+        <div class="dashboard-section-head"><div><h2>⛓️ Votos Vinculativos</h2><p>Compromissos especiais em troca de poder.</p></div><button class="main-btn purple-btn" type="button" onclick="abrirCriacaoMissao('voto')">+ NOVO</button></div>
+        <div id="dashboardVotos" class="dashboard-list"></div>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="dashboard-section-head"><div><h2>⚡ Acesso rápido</h2><p>Entre direto no que importa.</p></div></div>
+        <div class="dashboard-actions">
+          <button class="main-btn purple-btn" onclick="abrirSkills()">◆ TÉCNICAS<br><small>Skill Tree e técnicas</small></button>
+          <button class="main-btn red-btn" onclick="abrirCombate()">⚔ COMBATE<br><small>Duelo e caça</small></button>
+          <button class="main-btn blue-btn" onclick="abrirLeaderboard()">🏆 RANKING<br><small>Compare streaks</small></button>
+          <button class="main-btn blue-btn" onclick="abrirPerfil()">👤 PERSONAGEM<br><small>Ficha e atributos</small></button>
+        </div>
+      </section>
+    </div>
+  </main>
 </div>
 
 <div id="pagina1" class="page">
@@ -820,26 +896,26 @@ button{cursor:pointer}
 <div id="pagina3" class="page hidden">
   <div class="topbar">
     <h1 class="logo">MISSÕES</h1>
-    <p class="subtitle">Disciplina • Foco • Evolução</p>
+    <p class="subtitle">Objetivos • Disciplina • Evolução</p>
   </div>
 
   <section class="panel">
     <div class="todos-head">
       <div>
-        <h1>Seus To-Dos</h1>
-        <p>Você pode ter 1 To-Do e 1 Voto Vinculativo de cada classe: Corpo, Mente e Alma.</p>
+        <h1>Gerenciar Missões</h1>
+        <p>Você pode ter 1 Missão e 1 Voto Vinculativo de cada classe: Corpo, Mente e Alma.</p>
       </div>
     </div>
 
     <div class="form">
-      <input id="novaTarefa" type="text" placeholder="Digite uma tarefa...">
+      <input id="novaTarefa" type="text" placeholder="Descreva sua missão...">
       <select id="classeTarefa">
         <option value="corpo">⚔ Corpo</option>
         <option value="mente">🧠 Mente</option>
         <option value="alma">✦ Alma</option>
       </select>
       <select id="tipoTarefa" onchange="verificarTipoVoto(); atualizarOpcoesClasse()">
-        <option value="todo">To-Do</option>
+        <option value="todo">Missão</option>
         <option value="voto">Voto Vinculativo</option>
       </select>
       <div class="frequency-box">
@@ -988,13 +1064,55 @@ async function confirmar(){
   document.getElementById("resultadoMind").textContent=personagem.mind;
   document.getElementById("resultadoClasse").textContent=personagem.classe;
   document.getElementById("heroClasse").textContent=personagem.classe;
-  mostrarPagina("pagina2");
+  mostrarDashboard();
 }
 
 function irParaPagina3(){
+  mostrarDashboard();
+}
+
+function abrirCriacaoMissao(tipo){
   mostrarPagina("pagina3");
+  const sel=document.getElementById("tipoTarefa");
+  if(sel){sel.value=tipo||"todo"; verificarTipoVoto(); atualizarOpcoesClasse();}
   atualizarListaTarefas();
 }
+
+async function mostrarDashboard(){
+  mostrarPagina("paginaDashboard");
+  await renderDashboard();
+}
+
+async function renderDashboard(){
+  try{
+    const [data, profile, skills]=await Promise.all([api("/api/data"), api("/api/profile"), api("/api/skills")]);
+    document.getElementById("dashboardUsuario").textContent=data.usuario||usuarioLogado||"jogador";
+    const tree=skills.skill_tree_nome||"Técnica não escolhida";
+    document.getElementById("dashboardTree").textContent="🌳 "+tree;
+    document.getElementById("dashXP").textContent=data.xp??0;
+    const d=profile.dias||{};
+    ["corpo","mente","alma"].forEach(cls=>{
+      const n=Number(d[cls]||0);
+      const id=cls.charAt(0).toUpperCase()+cls.slice(1);
+      document.getElementById("dash"+id).textContent=n;
+      document.getElementById("dashStreak"+id).textContent=n;
+      document.getElementById("dashBar"+id).style.width=Math.min(100,n*10)+"%";
+    });
+    renderDashboardTasks();
+  }catch(e){console.error(e); renderDashboardTasks();}
+}
+
+function renderDashboardTasks(){
+  const today=new Date().getDay(), wd=(today+6)%7;
+  const active=tarefas.filter(t=>Array.isArray(t.frequencia)&&t.frequencia.includes(wd));
+  const missoes=active.filter(t=>(t.tipo||"todo")==="todo");
+  const votos=active.filter(t=>(t.tipo||"todo")==="voto");
+  const missionBox=document.getElementById("dashboardMissoes"), votoBox=document.getElementById("dashboardVotos");
+  const item=(t,idx)=>`<div class="dashboard-mission ${t.classe} ${t.concluida?'done':''}"><input type="checkbox" ${t.concluida?'checked':''} ${t.id?'':'disabled'} onchange="concluirTarefa(${idx})"><div><div class="mission-title">${escaparXml(t.texto)}</div><div class="mission-meta">${nomeClasse(t.classe)} • ${nomesDias(t.frequencia)}</div></div><button class="main-btn red-btn" style="padding:8px 10px" onclick="excluirTarefa(${idx})">×</button></div>`;
+  missionBox.innerHTML=missoes.length?missoes.map(t=>item(t,tarefas.indexOf(t))).join(""):'<div class="dashboard-empty">Nenhuma missão para hoje. Crie uma e avance sua jornada.</div>';
+  votoBox.innerHTML=votos.length?votos.map(t=>`<div class="dashboard-voto"><div class="voto-title">⛓️ ${escaparXml(t.texto)}</div><div class="voto-bonus">${nomeClasse(t.classe)} • Bônus atual: +0,5 • ${t.concluida?'✓ cumprido hoje':'aguardando cumprimento'}</div><div style="margin-top:10px"><input type="checkbox" ${t.concluida?'checked':''} ${t.id?'':'disabled'} onchange="concluirTarefa(${tarefas.indexOf(t)})"> Marcar como cumprido</div></div>`).join(""):'<div class="dashboard-empty">Nenhum voto vinculativo ativo.</div>';
+}
+
 
 function voltarPagina2(){
   mostrarPagina("pagina2");
@@ -1017,19 +1135,19 @@ function adicionarTarefa(){
   if(!frequencia.length){alert('Escolha pelo menos um dia da semana.');return;}
   if(tarefas.length>=6){alert('Você já possui os 6 espaços de tarefa.');return;}
   if(tarefas.some(t=>t.classe===classe && (t.tipo||'todo')===tipo)){
-    const nome=tipo==='voto'?'Voto Vinculativo':'To-Do'; alert(`Essa classe já possui um ${nome}. Escolha outra classe.`); return;
+    const nome=tipo==='voto'?'Voto Vinculativo':'Missão'; alert(`Essa classe já possui um ${nome}. Escolha outra classe.`); return;
   }
   tarefas.push({id:null,texto,classe,tipo,frequencia,concluida:false});
   input.value='';
-  salvarTarefas().then(sincronizarDadosServidor).then(atualizarListaTarefas);
+  salvarTarefas().then(sincronizarDadosServidor).then(()=>{atualizarListaTarefas();renderDashboardTasks();});
 }
 async function concluirTarefa(indice){
   const tarefa=tarefas[indice]; if(!tarefa || !tarefa.id)return;
-  try{ await api(`/api/tasks/${tarefa.id}/complete`,{method:'POST'}); await sincronizarDadosServidor(); atualizarListaTarefas(); }
+  try{ await api(`/api/tasks/${tarefa.id}/complete`,{method:'POST'}); await sincronizarDadosServidor(); atualizarListaTarefas(); renderDashboardTasks(); }
   catch(e){alert(e.message);}
 }
 function excluirTarefa(indice){
-  tarefas.splice(indice,1); salvarTarefas().then(sincronizarDadosServidor).then(atualizarListaTarefas);
+  tarefas.splice(indice,1); salvarTarefas().then(sincronizarDadosServidor).then(()=>{atualizarListaTarefas();renderDashboardTasks();});
 }
 
 function nomeClasse(classe){
@@ -1037,7 +1155,7 @@ function nomeClasse(classe){
 }
 
 function nomeTipo(tipo){
-  return tipo==="voto" ? "Voto Vinculativo" : "To-Do";
+  return tipo==="voto" ? "Voto Vinculativo" : "Missão";
 }
 
 function atualizarListaTarefas(){
@@ -1224,7 +1342,7 @@ async function login(){
     const temPersonagem=await sincronizarDadosServidor();
     atualizarTela();
     atualizarListaTarefas();
-    if(temPersonagem){mostrarPagina("pagina2");}
+    if(temPersonagem){mostrarDashboard();}
     else{mostrarPagina("pagina1");}
   }catch(e){
     msg.style.color="var(--vermelho2)";
