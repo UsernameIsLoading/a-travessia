@@ -503,6 +503,10 @@ button{cursor:pointer}
 @media(max-width:600px){.frequency-days{grid-template-columns:repeat(4,1fr)}.profile-grid{grid-template-columns:1fr}}
 
 /* Loja de Skills */
+
+.skill-tree-box{border:1px solid rgba(120,100,255,.35);border-radius:14px;padding:16px;margin:16px 0;background:rgba(100,80,220,.07)}
+.skill-tree-box h2{margin:0 0 6px}.skill-tree-box select{width:100%;padding:12px;border-radius:10px;background:#111;color:inherit;border:1px solid rgba(255,255,255,.18)}.skill-tree-note{font-size:.9rem;opacity:.8;margin-top:8px}.skill-tree-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:rgba(130,100,255,.16);font-size:.8rem;margin-bottom:8px}
+
 .skill-shop{display:grid;gap:16px}.skill-group h2{margin:8px 0}.skill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.skill-card{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;background:rgba(255,255,255,.03)}.skill-card h3{margin:0 0 6px}.skill-meta{font-size:.85rem;opacity:.8;margin:6px 0}.skill-effect{min-height:44px}.skill-card button{margin-top:10px}.skill-equipped{outline:2px solid rgba(255,255,255,.35)}
 </style>
 
@@ -697,6 +701,16 @@ button{cursor:pointer}
       </article>
     </div>
 
+    <div class="skill-tree-box">
+      <span class="skill-tree-badge">🌳 ESCOLHA DEFINITIVA</span>
+      <h2>Escolha sua Skill Tree</h2>
+      <p>Na criação, seu personagem escolhe <b>uma única árvore de técnica</b>. Depois disso, ele só poderá desbloquear técnicas pertencentes a essa árvore.</p>
+      <select id="skillTree" onchange="atualizarTela()">
+        <option value="">— Selecione sua árvore —</option>
+      </select>
+      <div id="skillTreeDesc" class="skill-tree-note">A escolha não poderá ser trocada depois.</div>
+    </div>
+
     <div class="rules">
       <strong>REGRAS</strong><br>
       • Você deve distribuir todos os 3 pontos.<br>
@@ -705,7 +719,7 @@ button{cursor:pointer}
     </div>
 
     <button id="confirmar" class="main-btn blue-btn" onclick="confirmar()" disabled>
-      CONFIRMAR ATRIBUTOS
+      CONFIRMAR ATRIBUTOS E ÁRVORE
     </button>
   </section>
 </div>
@@ -878,7 +892,7 @@ button{cursor:pointer}
 <div id="paginaSkills" class="page hidden">
   <div class="topbar"><h1 class="logo">SKILL SHOP</h1><p class="subtitle">Escolha suas técnicas • CT define quantas você consegue equipar</p></div>
   <section class="panel">
-    <div class="todos-head"><div><h1>Loja de Skills</h1><p id="skillResumo">Carregando...</p></div><button class="main-btn purple-btn" onclick="abrirSkills()">ATUALIZAR</button></div>
+    <div class="todos-head"><div><h1>Loja de Skills</h1><p id="skillResumo">Carregando...</p><p style="color:#999;font-size:12px;margin:6px 0 0;">Dano = base + dado • CE = custo de Energia Amaldiçoada • CT = espaço de técnica</p></div><button class="main-btn purple-btn" onclick="abrirSkills()">ATUALIZAR</button></div>
     <div id="skillShop" class="skill-shop"></div>
     <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA MISSÕES</button></div>
   </section>
@@ -907,6 +921,18 @@ let streaks={
 const TOTAL_PONTOS=3;
 const MAX_ATRIBUTO=3;
 
+const SKILL_TREE_OPTIONS={
+  shrine:['Shrine','Cortes, teia e fogo.'],limitless:['Limitless','Infinity, Blue, Red e Hollow Purple.'],'ten-shadows':['Ten Shadows Technique','Shikigami e Chimera Shadow Garden.'],'cursed-spirit-manipulation':['Cursed Spirit Manipulation','Controle de espíritos e Uzumaki.'],'idle-transfiguration':['Idle Transfiguration','Manipulação da alma.'],'straw-doll':['Straw Doll Technique','Pregos, Hairpin e Resonance.'],ratio:['Ratio Technique','Pontos fracos e Collapse.'],projection:['Projection Sorcery','Movimento em 24 quadros.'],blood:['Blood Manipulation','Sangue ofensivo e reforço.'],'boogie-woogie':['Boogie Woogie','Troca de posições.'],'cursed-speech':['Cursed Speech','Ordens amaldiçoadas.'],copy:['Copy','Cópia de técnicas.'],construction:['Construction','Criação de matéria.'],'star-rage':['Star Rage','Massa virtual.'],sky:['Sky Manipulation','Manipulação do céu.'],'granite-blast':['Granite Blast','Descargas concentradas.'],comedian:['Comedian','Efeito baseado no humor.'],'technique-extinguishment':['Technique Extinguishment','Anulação de técnicas.'],inverse:['Inverse','Inversão da força.'],seance:['Séance Technique','Manifestação de características.'],puppet:['Puppet Manipulation','Marionetes.'],'auspicious-beasts':['Auspicious Beasts Summon','Bestas Auspiciosas.'],rot:['Rot Technique','Decomposição.'],cloning:['Cloning Technique','Cópias.'],miracles:['Miracles','Milagres acumulados.'],ice:['Ice Formation','Formação de gelo.'],'disaster-flames':['Disaster Flames','Fogo e meteorito.'],'disaster-plants':['Disaster Plants','Vegetação amaldiçoada.'],'disaster-tides':['Disaster Tides','Água e criaturas aquáticas.'],'contractual-recreation':['Contractual Re-Creation','Reconstrução de objetos.'],'love-rendezvous':['Love Rendezvous','Controle de aproximação.'],'solo-forbidden-area':['Solo Forbidden Area','Fortalecimento sob condições.'],'black-bird':['Black Bird Manipulation','Controle de corvos.'],'mythical-beast-amber':['Mythical Beast Amber','Técnica máxima elétrica.'],'prayer-song':['Prayer Song','Fortalecimento por cântico.'],antigravity:['Antigravity System','Gravidade e reversão.'],light:['Light','Luz e escuridão.'],smallpox:['Smallpox Deity Domain','Domínio da Divindade da Varíola.'],'deadly-sentencing':['Deadly Sentencing Domain','Julgamento e Confisco.'],'idle-death-gamble':['Idle Death Gamble Domain','Jogo de azar e Jackpot.'],'womb-profusion':['Womb Profusion Domain','Expansão de domínio.'],'threefold-affliction':['Threefold Affliction Domain','Expansão de domínio.'],'authentic-mutual-love':['Authentic Mutual Love Domain','Expansão de domínio.'],'hanami-domain':['Hanami Domain','Expansão de domínio.'],'dabura-domain':['Dabura Domain','Expansão de domínio.'],'yuji-domain':['Yuji Domain','Expansão de domínio.']};
+
+function preencherSkillTrees(){
+  const sel=document.getElementById('skillTree'); if(!sel || sel.options.length>1)return;
+  Object.entries(SKILL_TREE_OPTIONS).forEach(([id,v])=>{const o=document.createElement('option');o.value=id;o.textContent=v[0];sel.appendChild(o);});
+}
+function atualizarDescricaoSkillTree(){
+  const sel=document.getElementById('skillTree'),desc=document.getElementById('skillTreeDesc'); if(!sel||!desc)return;
+  const v=SKILL_TREE_OPTIONS[sel.value]; desc.textContent=v?`${v[1]} A escolha não poderá ser trocada depois.`:'A escolha não poderá ser trocada depois.';
+}
+
 function alterarAtributo(atributo,valor){
   if(valor>0 && pontosRestantes()<=0)return;
   if(valor>0 && atributos[atributo]>=MAX_ATRIBUTO)return;
@@ -924,7 +950,10 @@ function atualizarTela(){
   document.getElementById("soul").textContent=atributos.soul;
   document.getElementById("mind").textContent=atributos.mind;
   document.getElementById("pontos").textContent=pontosRestantes();
-  document.getElementById("confirmar").disabled=pontosRestantes()!==0;
+  preencherSkillTrees();
+  atualizarDescricaoSkillTree();
+  const tree=document.getElementById("skillTree");
+  document.getElementById("confirmar").disabled=pontosRestantes()!==0 || !tree || !tree.value;
 }
 
 function calcularClasse(){
@@ -948,9 +977,11 @@ function mostrarPagina(id){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-function confirmar(){
-  const personagem={...atributos,classe:calcularClasse()};
-  salvarPersonagem();
+async function confirmar(){
+  const tree=document.getElementById("skillTree")?.value||"";
+  if(!tree){alert("Escolha uma Skill Tree antes de confirmar.");return;}
+  const personagem={...atributos,classe:calcularClasse(),skill_tree:tree};
+  try{await salvarPersonagem(personagem);}catch(e){alert(e.message);return;}
 
   document.getElementById("resultadoBody").textContent=personagem.body;
   document.getElementById("resultadoSoul").textContent=personagem.soul;
@@ -1147,6 +1178,7 @@ async function sincronizarDadosServidor(){
     document.getElementById("resultadoMind").textContent=atributos.mind;
     document.getElementById("resultadoClasse").textContent=p.classe||calcularClasse();
     document.getElementById("heroClasse").textContent=p.classe||calcularClasse();
+    const tree=document.getElementById('skillTree'); if(tree && p.skill_tree){preencherSkillTrees();tree.value=p.skill_tree;tree.disabled=true;atualizarDescricaoSkillTree();}
     return true;
   }
   return false;
@@ -1280,10 +1312,11 @@ async function logout(){
   mostrarPagina("paginaLogin");
 }
 
-async function salvarPersonagem(){
+async function salvarPersonagem(personagemArg=null){
   if(!usuarioLogado)return;
-  const personagem={...atributos,classe:calcularClasse()};
-  try{await api("/api/character",{method:"PUT",body:JSON.stringify({personagem})});}catch(e){console.error(e);}
+  const personagem=personagemArg||{...atributos,classe:calcularClasse(),skill_tree:document.getElementById("skillTree")?.value||""};
+  const data=await api("/api/character",{method:"PUT",body:JSON.stringify({personagem})});
+  return data;
 }
 
 
@@ -1292,17 +1325,18 @@ async function abrirSkills(){
   const box=document.getElementById('skillShop');
   try{
     const data=await api('/api/skills');
-    const cats={elementar:'🔥 ELEMENTARES',reforco:'🛡️ REFORÇOS',enfraquecimento:'☠️ ENFRAQUECIMENTOS'};
+    const cats={ofensiva:'⚔️ OFENSIVAS',espacial:'🌀 ESPACIAIS',defensiva:'🛡️ DEFENSIVAS',controle:'⛓️ CONTROLE',alma:'👁️ ALMA',invocacao:'🐺 INVOCAÇÕES',reforco:'✨ REFORÇOS',versatil:'🔄 VERSÁTEIS',especial:'🧿 ESPECIAIS',anulacao:'🚫 ANULAÇÃO',maxima:'💥 TÉCNICAS MÁXIMAS',reversa:'🔁 TÉCNICAS REVERSAS',dominio:'🌀 EXPANSÕES DE DOMÍNIO'};
+    const treeBanner=data.skill_tree?`<div class="skill-card"><h2>🌳 ${escaparXml(data.skill_tree_nome)}</h2><p>${escaparXml(data.skill_tree_descricao||'')} </p><p><b>Regra:</b> este personagem só pode desbloquear técnicas desta árvore.</p></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a loja.</p></div>`;
     const grupos=Object.entries(cats).map(([cat,title])=>{
-      const items=data.skills.filter(x=>x.categoria===cat && !x.adquirida && x.ct<=data.ct);
+      const items=data.skills.filter(x=>x.categoria===cat && !x.adquirida && x.mesma_arvore);
       if(!items.length)return '';
-      return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>`<div class="skill-card"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> • 💰 <b>${x.preco_xp} XP</b></div><div class="skill-effect">${x.efeito}</div><button class="main-btn purple-btn" onclick="comprarSkill('${x.id}')" ${x.pode_comprar?'':'disabled'}>${x.pode_comprar?'COMPRAR':'XP INSUFICIENTE'}</button></div>`).join('')}</div></div>`;
+      return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>{const req=x.prerequisitos&&x.prerequisitos.length?`<div class="skill-meta">🔒 Requer: <b>${x.prerequisitos.map(id=>(data.skills.find(y=>y.id===id)||{}).nome||id).join(', ')}</b></div>`:'';return `<div class="skill-card"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> • DANO: <b>${x.dano}</b> • 💰 <b>${x.preco_xp} XP</b></div>${req}<div class="skill-effect">${x.efeito}</div><button class="main-btn purple-btn" onclick="comprarSkill('${x.id}')" ${x.pode_comprar?'':'disabled'}>${x.pode_comprar?'DESBLOQUEAR':'BLOQUEADA'}</button></div>`;}).join('')}</div></div>`;
     }).join('');
     const owned=data.skills.filter(x=>x.adquirida);
     const eq=owned.filter(x=>x.equipada).reduce((n,x)=>n+x.ct,0);
-    const ownHtml=owned.length?`<div class="skill-group"><h2>🎒 MINHAS SKILLS</h2><div class="skill-grid">${owned.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b></div><div class="skill-effect">${x.efeito}</div><button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button></div>`).join('')}</div></div>`:'';
-    box.innerHTML=`<div class="skill-card"><h2>💰 ${data.xp} XP</h2><p>CT disponível: <b>${data.ct.toFixed(2)}</b>. A loja mostra apenas skills que cabem no seu CT atual.</p></div>${grupos||'<div class="skill-card"><p>Nenhuma nova skill disponível para seu CT atual.</p></div>'}${ownHtml}`;
-    document.getElementById('skillResumo').textContent=`💰 ${data.xp} XP • ${owned.length}/${data.skills.length} compradas • ${eq.toFixed(2)} CT equipados`;
+    const ownHtml=owned.length?`<div class="skill-group"><h2>🎒 MINHAS SKILLS</h2><div class="skill-grid">${owned.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> • DANO: <b>${x.dano}</b></div><div class="skill-effect">${x.efeito}</div><button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button></div>`).join('')}</div></div>`:'';
+    box.innerHTML=treeBanner+`<div class="skill-card"><h2>💰 ${data.xp} XP</h2><p>CT disponível: <b>${data.ct.toFixed(2)}</b> • ${data.skill_tree_nome?'Árvore: <b>'+escaparXml(data.skill_tree_nome)+'</b>':'árvore não escolhida'}</p></div>${grupos||'<div class="skill-card"><p>Nenhuma nova técnica disponível nesta árvore para seu CT/pré-requisitos atuais.</p></div>'}${ownHtml}`;
+    document.getElementById('skillResumo').textContent=`💰 ${data.xp} XP • ${owned.length} desbloqueadas • ${eq.toFixed(2)} CT equipados`;
   }catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
 async function comprarSkill(id){try{await api('/api/skills/'+encodeURIComponent(id)+'/buy',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
@@ -1338,13 +1372,13 @@ async function enfrentarMaldicao(i){
 }
 async function abrirBatalhaMaldicao(id){
   const box=document.getElementById('combateBox');
-  try{const b=await api('/api/entity-battles/'+id); const skills=await api('/api/skills'); const eq=skills.skills.filter(x=>x.equipada); box.innerHTML=`<div class="skill-card"><h2>☠️ ${escaparXml(b.entity.grade)}</h2><p>${escaparXml(b.log.join(' • '))}</p><p><b>Você:</b> HP ${b.seu_hp.toFixed(1)} / CE ${b.seu_ce.toFixed(1)} &nbsp; | &nbsp; <b>Maldição:</b> HP ${b.inimigo_hp.toFixed(1)}</p>${b.status==='active'?`<button class="main-btn blue-btn" onclick="acaoMaldicao(${id},null)">ATAQUE BÁSICO (1d4)</button>${eq.map(x=>`<button class="main-btn purple-btn" onclick="acaoMaldicao(${id},'${x.id}')">${escaparXml(x.nome)} — ${x.ce} CE</button>`).join('')}`:'<p>Combate encerrado.</p>'}<button class="main-btn blue-btn" onclick="carregarCombate()">← COMBATES</button></div>`;}catch(e){box.innerHTML='<p>'+e.message+'</p>';}
+  try{const b=await api('/api/entity-battles/'+id); const skills=await api('/api/skills'); const eq=skills.skills.filter(x=>x.equipada); box.innerHTML=`<div class="skill-card"><h2>☠️ ${escaparXml(b.entity.grade)}</h2><p>${escaparXml(b.log.join(' • '))}</p><p><b>Você:</b> HP ${b.seu_hp.toFixed(1)} / CE ${b.seu_ce.toFixed(1)} &nbsp; | &nbsp; <b>Maldição:</b> HP ${b.inimigo_hp.toFixed(1)}</p>${b.status==='active'?`<button class="main-btn blue-btn" onclick="acaoMaldicao(${id},null)">ATAQUE BÁSICO (1d4)</button>${eq.map(x=>`<button class="main-btn purple-btn" onclick="acaoMaldicao(${id},'${x.id}')">${escaparXml(x.nome)} — ${x.ce} CE • DANO ${x.dano}</button>`).join('')}`:'<p>Combate encerrado.</p>'}<button class="main-btn blue-btn" onclick="carregarCombate()">← COMBATES</button></div>`;}catch(e){box.innerHTML='<p>'+e.message+'</p>';}
 }
 async function acaoMaldicao(id,skill){try{await api('/api/entity-battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalhaMaldicao(id);}catch(e){alert(e.message);}}
 async function iniciarCombate(){const nome=document.getElementById('oponenteCombate').value.trim();if(!nome)return alert('Digite o usuário do adversário.');try{const b=await api('/api/battles',{method:'POST',body:JSON.stringify({oponente:nome})});document.getElementById('oponenteCombate').value='';await abrirBatalha(b.id);}catch(e){alert(e.message);}}
 async function abrirBatalha(id){
   const box=document.getElementById('combateBox');
-  try{const b=await api('/api/battles/'+id); const souEu=b.meu_turno; const skills=(b.skills||[]); box.innerHTML=`<div class="skill-card"><h2>${escaparXml(b.jogador1)} ${b.status==='active'?'⚔':'🏁'} ${escaparXml(b.jogador2)}</h2><p>${escaparXml(b.log.join(' • '))}</p><p><b>Você:</b> HP ${b.seu_hp.toFixed(1)} / CE ${b.seu_ce.toFixed(1)} &nbsp; | &nbsp; <b>Adversário:</b> HP ${b.inimigo_hp.toFixed(1)}</p>${souEu&&b.status==='active'?`<button class="main-btn blue-btn" onclick="acaoBatalha(${id},null)">ATAQUE BÁSICO (1d4)</button>${skills.map(s=>`<button class="main-btn purple-btn" onclick="acaoBatalha(${id},'${s.id}')">${s.nome} — ${s.ce} CE</button>`).join('')}`:'<p>'+ (b.status==='active'?'Aguardando o turno do adversário.':'Combate encerrado.') +'</p>'}<button class="main-btn blue-btn" onclick="carregarCombate()">← COMBATES</button></div>`;}catch(e){box.innerHTML=`<p>${e.message}</p>`;}
+  try{const b=await api('/api/battles/'+id); const souEu=b.meu_turno; const skills=(b.skills||[]); box.innerHTML=`<div class="skill-card"><h2>${escaparXml(b.jogador1)} ${b.status==='active'?'⚔':'🏁'} ${escaparXml(b.jogador2)}</h2><p>${escaparXml(b.log.join(' • '))}</p><p><b>Você:</b> HP ${b.seu_hp.toFixed(1)} / CE ${b.seu_ce.toFixed(1)} &nbsp; | &nbsp; <b>Adversário:</b> HP ${b.inimigo_hp.toFixed(1)}</p>${souEu&&b.status==='active'?`<button class="main-btn blue-btn" onclick="acaoBatalha(${id},null)">ATAQUE BÁSICO (1d4)</button>${skills.map(s=>`<button class="main-btn purple-btn" onclick="acaoBatalha(${id},'${s.id}')">${s.nome} — ${s.ce} CE • DANO ${s.dano}</button>`).join('')}`:'<p>'+ (b.status==='active'?'Aguardando o turno do adversário.':'Combate encerrado.') +'</p>'}<button class="main-btn blue-btn" onclick="carregarCombate()">← COMBATES</button></div>`;}catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
 async function acaoBatalha(id,skill){try{await api('/api/battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalha(id);}catch(e){alert(e.message);}}
 
