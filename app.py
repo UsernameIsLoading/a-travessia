@@ -82,6 +82,9 @@ SKILLS = [
     ('gravity-reversal','Gravity Reversal','reversa',4,160,'3+2d4','Reversão do Antigravity System: aumenta a gravidade; -2 Movimento e -2 Defesa por 2 rodadas.','damage'),
     ('light','Light','especial',1,20,'2+1d6','Dispara/solidifica luz para ataque e movimentação.','damage'),
     ('darkness','Darkness — Reversal of Light','reversa',1,40,'2+1d6','Reversão de Light: cria escuridão; -2 Visão e -2 Defesa.','damage'),
+    ('smallpox-technique','Smallpox Deity Technique','controle',3,80,'0','Manifestação da técnica da Divindade da Varíola; prepara o ritual do domínio.','control'),
+    ('deadly-sentencing-technique','Deadly Sentencing','controle',3,80,'0','Invoca o tribunal e o julgamento de regras; o domínio é sua progressão final.','special'),
+    ('restless-gambler','Restless Gambler','especial',3,80,'0','Técnica de jogo que prepara as condições do Jackpot.','special'),
     # Domínios
     ('domain-malevolent-shrine','Domain Expansion: Malevolent Shrine','dominio',4,240,'3+2d4','Acerto garantido; todos os inimigos sofrem o dano por rodada por 3 rodadas e -2 Defesa.','domain'),
     ('domain-unlimited-void','Domain Expansion: Unlimited Void','dominio',4,240,'0','Acerto garantido; alvo fica Atordoado por 2 rodadas e não pode usar técnicas durante o efeito.','domain'),
@@ -108,10 +111,10 @@ SKILLS = [
 # Uma personagem pertence a UMA única árvore de técnica.
 # A árvore é escolhida na criação e controla tudo que pode ser aprendido depois.
 SKILL_TREES = {
-    'shrine': {'nome':'Shrine','descricao':'Cortes, teia e fogo de Sukuna.','skills':['dismantle','cleave','spiderweb','furnace','domain-malevolent-shrine']},
+    'shrine': {'nome':'Shrine','descricao':'Cortes, teia e fogo de Sukuna.','skills':['dismantle','cleave','spiderweb','furnace','domain-malevolent-shrine','domain-yuji']},
     'limitless': {'nome':'Limitless','descricao':'Manipulação do espaço: Infinity, Blue, Red e Hollow Purple.','skills':['infinity','blue','red','hollow-purple','domain-unlimited-void']},
     'ten-shadows': {'nome':'Ten Shadows Technique','descricao':'Shikigami das Dez Sombras e Chimera Shadow Garden.','skills':['divine-dogs','nue','great-frog','max-elephant','round-deer','piercing-ox','mahoraga','domain-chimera-shadow']},
-    'cursed-spirit-manipulation': {'nome':'Cursed Spirit Manipulation','descricao':'Controle e compressão de espíritos amaldiçoados.','skills':['uzumaki']},
+    'cursed-spirit-manipulation': {'nome':'Cursed Spirit Manipulation','descricao':'Controle e compressão de espíritos amaldiçoados.','skills':['uzumaki','domain-womb-profusion']},
     'idle-transfiguration': {'nome':'Idle Transfiguration','descricao':'Manipulação da alma e transformação corporal.','skills':['transfiguration','soul-manipulation','domain-self-embodiment']},
     'straw-doll': {'nome':'Straw Doll Technique','descricao':'Pregos, Hairpin e Resonance.','skills':['nobara-nails','hairpin','resonance']},
     'ratio': {'nome':'Ratio Technique','descricao':'Pontos fracos e colapso estrutural.','skills':['ratio','collapse']},
@@ -119,8 +122,8 @@ SKILL_TREES = {
     'blood': {'nome':'Blood Manipulation','descricao':'Controle do próprio sangue para ataque e reforço.','skills':['piercing-blood','flowing-red-scale','supernova']},
     'boogie-woogie': {'nome':'Boogie Woogie','descricao':'Troca instantânea de posições.','skills':['boogie-woogie']},
     'cursed-speech': {'nome':'Cursed Speech','descricao':'Ordens amaldiçoadas que afetam o alvo.','skills':['cursed-speech-stop','cursed-speech-repel','cursed-speech-sleep']},
-    'copy': {'nome':'Copy','descricao':'Cópia de técnicas sob as condições da técnica copiada.','skills':['copy']},
-    'construction': {'nome':'Construction','descricao':'Criação de matéria através de energia amaldiçoada.','skills':['construction']},
+    'copy': {'nome':'Copy','descricao':'Cópia de técnicas sob as condições da técnica copiada.','skills':['copy','domain-authentic-mutual-love']},
+    'construction': {'nome':'Construction','descricao':'Criação de matéria através de energia amaldiçoada.','skills':['construction','domain-threefold-affliction']},
     'star-rage': {'nome':'Star Rage','descricao':'Massa virtual aplicada ao combate.','skills':['star-rage','domain-yuki']},
     'sky': {'nome':'Sky Manipulation','descricao':'Distorção e manipulação da superfície do céu.','skills':['sky-manipulation','domain-uro']},
     'granite-blast': {'nome':'Granite Blast','descricao':'Descargas concentradas de energia amaldiçoada.','skills':['granite-blast','domain-ryu']},
@@ -135,7 +138,7 @@ SKILL_TREES = {
     'miracles': {'nome':'Miracles','descricao':'Acúmulo e consumo de milagres.','skills':['miracles']},
     'ice': {'nome':'Ice Formation','descricao':'Formação e manipulação de gelo.','skills':['ice-formation','domain-time-cell']},
     'disaster-flames': {'nome':'Disaster Flames','descricao':'Chamas vulcânicas e meteorito máximo.','skills':['disaster-flames','meteor','domain-coffin-iron-mountain']},
-    'disaster-plants': {'nome':'Disaster Plants','descricao':'Vegetação amaldiçoada para prender e atacar.','skills':['disaster-plants']},
+    'disaster-plants': {'nome':'Disaster Plants','descricao':'Vegetação amaldiçoada para prender e atacar.','skills':['disaster-plants','domain-hanami']},
     'disaster-tides': {'nome':'Disaster Tides','descricao':'Água e criaturas aquáticas amaldiçoadas.','skills':['disaster-tides','domain-horizon-skandha']},
     'contractual-recreation': {'nome':'Contractual Re-Creation','descricao':'Reconstrução de objetos a partir de contratos e recibos.','skills':['contractual-recreation']},
     'love-rendezvous': {'nome':'Love Rendezvous','descricao':'Controle de aproximação entre alvos designados.','skills':['love-rendezvous']},
@@ -145,9 +148,9 @@ SKILL_TREES = {
     'prayer-song': {'nome':'Prayer Song','descricao':'Fortalecimento de capacidades físicas através de cântico.','skills':['prayer-song']},
     'antigravity': {'nome':'Antigravity System','descricao':'Manipulação e reversão da gravidade.','skills':['antigravity-system','gravity-reversal']},
     'light': {'nome':'Light','descricao':'Manipulação de luz e sua reversão em escuridão.','skills':['light','darkness']},
-    'smallpox': {'nome':'Smallpox Deity','descricao':'Domínio baseado na técnica da Divindade da Varíola.','skills':['domain-smallpox']},
-    'deadly-sentencing': {'nome':'Deadly Sentencing','descricao':'Julgamento e confisco através de tribunal amaldiçoado.','skills':['domain-deadly-sentencing']},
-    'idle-death-gamble': {'nome':'Idle Death Gamble','descricao':'Expansão baseada em um jogo de azar e Jackpot.','skills':['domain-idle-death-gamble']},
+    'smallpox': {'nome':'Smallpox Deity','descricao':'Técnica ritualística e domínio da Divindade da Varíola.','skills':['smallpox-technique','domain-smallpox']},
+    'deadly-sentencing': {'nome':'Deadly Sentencing','descricao':'Tribunal amaldiçoado, julgamento e confisco.','skills':['deadly-sentencing-technique','domain-deadly-sentencing']},
+    'idle-death-gamble': {'nome':'Idle Death Gamble','descricao':'Técnica de jogo de azar e sua expansão de domínio.','skills':['restless-gambler','domain-idle-death-gamble']},
     'womb-profusion': {'nome':'Womb Profusion','descricao':'Expansão de domínio de Kenjaku.','skills':['domain-womb-profusion']},
     'threefold-affliction': {'nome':'Threefold Affliction','descricao':'Expansão de domínio de Yorozu.','skills':['domain-threefold-affliction']},
     'authentic-mutual-love': {'nome':'Authentic Mutual Love','descricao':'Expansão de domínio de Yuta.','skills':['domain-authentic-mutual-love']},
@@ -237,7 +240,7 @@ def init_db():
     c=db()
     if DATABASE_URL:
         c.executescript('''
-        CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0,progress_score DOUBLE PRECISION NOT NULL DEFAULT 0,progress_days DOUBLE PRECISION NOT NULL DEFAULT 0,grade TEXT NOT NULL DEFAULT 'Grade 4');
         CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
         CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body DOUBLE PRECISION NOT NULL DEFAULT 0,mind DOUBLE PRECISION NOT NULL DEFAULT 0,soul DOUBLE PRECISION NOT NULL DEFAULT 0,class_name TEXT,skill_tree TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS tasks(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
@@ -252,7 +255,7 @@ def init_db():
         ''')
     else:
         c.executescript('''
-        CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0,progress_score REAL NOT NULL DEFAULT 0,progress_days REAL NOT NULL DEFAULT 0,grade TEXT NOT NULL DEFAULT 'Grade 4');
         CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body REAL NOT NULL DEFAULT 0,mind REAL NOT NULL DEFAULT 0,soul REAL NOT NULL DEFAULT 0,class_name TEXT,skill_tree TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
@@ -270,6 +273,14 @@ def init_db():
         if 'last_processed_day' not in cols: c.execute('ALTER TABLE users ADD COLUMN last_processed_day TEXT')
         for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
             c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
+    # Migração de progressão para PostgreSQL já existentes.
+    try:
+        if DATABASE_URL:
+            c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_score DOUBLE PRECISION NOT NULL DEFAULT 0")
+            c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_days DOUBLE PRECISION NOT NULL DEFAULT 0")
+            c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS grade TEXT NOT NULL DEFAULT 'Grade 4'")
+    except Exception:
+        pass
     # Migração da árvore de técnica para bancos já existentes.
     try:
         if DATABASE_URL:
@@ -322,6 +333,70 @@ def get_tasks(c,uid):
 def completion_set(c,uid,day):
     return {r['task_id'] for r in c.execute('SELECT c.task_id FROM completions c JOIN tasks t ON t.id=c.task_id WHERE t.user_id=? AND c.day=?',(uid,day))}
 
+GRADE_ORDER = ('Grade 4','Grade 3','Grade 2','Grade 1','Special Grade')
+GRADE_THRESHOLDS = {'Grade 4':0,'Grade 3':7,'Grade 2':30,'Grade 1':90,'Special Grade':180}
+GRADE_CONSISTENCY = {'Grade 3':70,'Grade 2':75,'Grade 1':80,'Special Grade':85}
+
+def grade_for_progress(days, score):
+    grade='Grade 4'
+    for g in GRADE_ORDER[1:]:
+        if days >= GRADE_THRESHOLDS[g] and score >= GRADE_CONSISTENCY[g]: grade=g
+        else: break
+    return grade
+
+def reset_progression(c, uid):
+    c.execute("UPDATE users SET progress_score=0,progress_days=0,grade='Grade 4' WHERE id=?",(uid,))
+
+def sync_domain_progression(c, uid, grade):
+    # Domínios são nós finais da árvore: não podem ser comprados na loja.
+    ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(uid,)).fetchone()
+    tree=ch['skill_tree'] if ch else None
+    if not tree:return
+    tree_skills=SKILL_TREES.get(tree,{}).get('skills',[])
+    domains=[sid for sid in tree_skills if next((x for x in SKILLS if x[0]==sid),None) and next(x for x in SKILLS if x[0]==sid)[7] == 'domain']
+    if not domains:return
+    owned={r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=?',(uid,))}
+    normal=[sid for sid in tree_skills if sid not in domains]
+    grade_ok=GRADE_ORDER.index(grade) >= GRADE_ORDER.index('Grade 1')
+    for sid in domains:
+        ready=grade_ok and all(x in owned for x in normal)
+        if ready and sid not in owned:
+            c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0)',(uid,sid))
+
+def update_progression_day(c,user,d,done,tasks):
+    due=[t for t in tasks if d.weekday() in t['frequencia']]
+    if not due:return
+    votes=[t for t in due if t['tipo']=='voto']
+    missions=[t for t in due if t['tipo']=='todo']
+    # Um voto quebrado é a única condição de reset absoluto.
+    if any(v['id'] not in done for v in votes):
+        reset_progression(c,user['id'])
+        return
+    total_weight=sum(2 if t['tipo']=='voto' else 1 for t in due)
+    done_weight=sum(2 if t['tipo']=='voto' else 1 for t in due if t['id'] in done)
+    daily=(done_weight/total_weight*100) if total_weight else 100
+    vote_bonus=1.25 if votes else 1.0
+    old=c.execute('SELECT progress_score,progress_days FROM users WHERE id=?',(user['id'],)).fetchone()
+    old_score=float(old['progress_score'] or 0); old_days=float(old['progress_days'] or 0)
+    new_days=old_days+daily/100.0
+    # Média acumulada de consistência, favorecendo constância sem exigir perfeição.
+    new_score=((old_score*old_days)+daily*vote_bonus)/(new_days if new_days else 1)
+    grade=grade_for_progress(new_days,new_score)
+    c.execute('UPDATE users SET progress_score=?,progress_days=?,grade=? WHERE id=?',(new_score,new_days,grade,user['id']))
+    # Crescimento de atributo acompanha a consistência específica de cada classe.
+    ch=c.execute('SELECT body,mind,soul FROM characters WHERE user_id=?',(user['id'],)).fetchone()
+    if not ch:return
+    for cls,col in [('corpo','body'),('mente','mind'),('alma','soul')]:
+        cdue=[t for t in due if t['classe']==cls]
+        if not cdue:continue
+        cdone=sum(1 for t in cdue if t['id'] in done)
+        ratio=cdone/len(cdue)
+        # Voto cumprido acelera o crescimento daquela dimensão.
+        mult=1.5 if any(t['tipo']=='voto' for t in cdue) else 1.0
+        growth=0.05*ratio*mult
+        c.execute(f'UPDATE characters SET {col}={col}+? WHERE user_id=?',(growth,user['id']))
+    sync_domain_progression(c,user['id'],grade)
+
 def process_until_yesterday(c,user):
     yesterday=today()-timedelta(days=1); last=user['last_processed_day']
     start=(date.fromisoformat(last)+timedelta(days=1)) if last else yesterday
@@ -331,6 +406,7 @@ def process_until_yesterday(c,user):
     tasks=get_tasks(c,user['id'])
     for i in range((yesterday-start).days+1):
         d=start+timedelta(days=i); done=completion_set(c,user['id'],iso(d)); wd=d.weekday()
+        update_progression_day(c,user,d,done,tasks)
         for cls in CLASSES:
             due=[t for t in tasks if t['classe']==cls and wd in t['frequencia']]
             if not due:
@@ -368,7 +444,7 @@ def user_payload(u):
     bonus={x:0.0 for x in CLASSES}
     for r in c.execute('SELECT class,bonus FROM vote_bonuses WHERE user_id=?',(u['id'],)):bonus[r['class']]=float(r['bonus'])
     c.commit(); c.close()
-    return {'tarefas':tasks,'streaks':s,'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name'],'skill_tree':ch['skill_tree']},'votoBonus':bonus}
+    return {'tarefas':tasks,'streaks':s,'xp':int(u['xp'] or 0),'progresso':{'score':float(u['progress_score'] or 0),'dias':float(u['progress_days'] or 0),'grade':u['grade'] or 'Grade 4'},'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name'],'skill_tree':ch['skill_tree']},'votoBonus':bonus}
 
 @app.get('/')
 def index():return send_file(os.path.join(BASE_DIR,'index.html'))
@@ -544,8 +620,7 @@ def attributes_for(c,uid):
     return base,bonus,eff,ch
 
 def stats_for(attrs,days):
-    days=max(1,int(days or 1));F=lambda a:30/((1+(a*a)/10)*days+30);fb,fm,fs=F(attrs['body']),F(attrs['mind']),F(attrs['soul'])
-    return {'F':{'corpo':fb,'mente':fm,'alma':fs},'HP':200*(1-fb),'CE':1000*(1-fs),'CT':1/fm}
+    return {'HP':200+100*float(attrs['body']),'CE':1000+500*float(attrs['soul']),'CT':1+float(attrs['mind'])}
 
 @app.get('/api/profile')
 def profile():
@@ -554,20 +629,26 @@ def profile():
     c=db();process_until_yesterday(c,u);vals={x:{'dias':0,'ultimoDia':None} for x in CLASSES}
     for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):vals[r['class']]={'dias':int(r['days']),'ultimoDia':r['last_day']}
     vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch=attributes_for(c,u['id']);stats=stats_for(eff,max(days.values()) if max(days.values()) else 1);c.commit();c.close()
-    return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats)
+    return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats,progresso={'score':float(u['progress_score'] or 0),'dias':float(u['progress_days'] or 0),'grade':u['grade'] or 'Grade 4'})
 
 @app.get('/api/skills')
 def skills():
     u,err=require_user()
     if err:return err
-    c=db(); owned={r['skill_id']:bool(r['equipped']) for r in c.execute('SELECT skill_id,equipped FROM user_skills WHERE user_id=?',(u['id'],))}
+    c=db(); sync_domain_progression(c,u['id'],u['grade'] or 'Grade 4'); c.commit(); owned={r['skill_id']:bool(r['equipped']) for r in c.execute('SELECT skill_id,equipped FROM user_skills WHERE user_id=?',(u['id'],))}
     xp=int(u['xp'] or 0); ct=current_ct(c,u['id']); ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone(); tree=ch['skill_tree'] if ch else None
     out=[]
     for sid,name,cat,skill_ct,ce,dano,effect,tipo in SKILLS:
         cost={1:50,2:100,3:175,4:275,5:400}[skill_ct]
         acquired=sid in owned
-        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'dano':dano,'efeito':effect,'preco_xp':cost,'adquirida':acquired,'pode_comprar':(not acquired and bool(tree) and SKILL_TREE_BY_ID.get(sid)==tree and skill_ct<=ct and xp>=cost and all(r in owned for r in SKILL_PREREQS.get(sid,[]))),'equipada':owned.get(sid,False)})
-    c.close();return jsonify(skills=out,xp=xp,ct=ct,skill_tree=tree,skill_tree_nome=(SKILL_TREES.get(tree,{}).get('nome') if tree else None),skill_tree_descricao=(SKILL_TREES.get(tree,{}).get('descricao') if tree else None))
+        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'dano':dano,'efeito':effect,'tipo':tipo,'preco_xp':cost,'prerequisitos':SKILL_PREREQS.get(sid,[]),'mesma_arvore':(bool(tree) and SKILL_TREE_BY_ID.get(sid)==tree),'adquirida':acquired,'pode_comprar':(tipo!='domain' and not acquired and bool(tree) and SKILL_TREE_BY_ID.get(sid)==tree and skill_ct<=ct and xp>=cost and all(r in owned for r in SKILL_PREREQS.get(sid,[]))),'equipada':owned.get(sid,False)})
+    domains=[]
+    if tree:
+        for sid in SKILL_TREES.get(tree,{}).get('skills',[]):
+            item=next((x for x in SKILLS if x[0]==sid),None)
+            if item and item[7]=='domain':
+                domains.append({'id':sid,'nome':item[1],'efeito':item[6],'desbloqueada':sid in owned,'requisito':'Grade 1 + todas as técnicas anteriores da árvore'})
+    c.close();return jsonify(skills=out,domains=domains,xp=xp,ct=ct,skill_tree=tree,skill_tree_nome=(SKILL_TREES.get(tree,{}).get('nome') if tree else None),skill_tree_descricao=(SKILL_TREES.get(tree,{}).get('descricao') if tree else None))
 
 @app.post('/api/skills/<skill_id>/buy')
 def buy_skill(skill_id):
@@ -575,6 +656,7 @@ def buy_skill(skill_id):
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Skill não encontrada.'),404
+    if item[7]=='domain':return jsonify(error='Domínios são desbloqueados pela progressão da Skill Tree, não comprados na loja.'),400
     cost={1:50,2:100,3:175,4:275,5:400}[item[3]]
     c=db(); ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone(); tree=ch['skill_tree'] if ch else None
     if not tree or SKILL_TREE_BY_ID.get(skill_id)!=tree:c.close();return jsonify(error='Essa técnica pertence a outra árvore. Seu personagem só pode aprender técnicas da árvore escolhida na criação.'),400

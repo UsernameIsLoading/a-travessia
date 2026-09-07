@@ -695,7 +695,7 @@ button{cursor:pointer}
           <div class="dashboard-stat"><div class="label">Corpo</div><div class="value" id="dashCorpo">0</div></div>
           <div class="dashboard-stat"><div class="label">Mente</div><div class="value" id="dashMente">0</div></div>
           <div class="dashboard-stat"><div class="label">Alma</div><div class="value" id="dashAlma">0</div></div>
-          <div class="dashboard-stat"><div class="label">XP</div><div class="value" id="dashXP">0</div></div>
+          <div class="dashboard-stat"><div class="label">XP</div><div class="value" id="dashXP">0</div></div><div class="dashboard-stat"><div class="label">Grau</div><div class="value" id="dashboardGrade">Grade 4</div></div><div class="dashboard-stat"><div class="label">Consistência</div><div class="value" id="dashboardConsistencia">0%</div></div><div class="dashboard-stat"><div class="label">Dias de progresso</div><div class="value" id="dashboardDias">0</div></div>
         </div>
         <div class="dashboard-progress" style="margin-top:16px">
           <div class="progress-row corpo"><b>Corpo</b><div class="progress-bar"><span id="dashBarCorpo"></span></div><b id="dashStreakCorpo">0</b></div>
@@ -969,7 +969,7 @@ button{cursor:pointer}
   <div class="topbar"><h1 class="logo">SKILL SHOP</h1><p class="subtitle">Escolha suas técnicas • CT define quantas você consegue equipar</p></div>
   <section class="panel">
     <div class="todos-head"><div><h1>Loja de Skills</h1><p id="skillResumo">Carregando...</p><p style="color:#999;font-size:12px;margin:6px 0 0;">Dano = base + dado • CE = custo de Energia Amaldiçoada • CT = espaço de técnica</p></div><button class="main-btn purple-btn" onclick="abrirSkills()">ATUALIZAR</button></div>
-    <div id="skillShop" class="skill-shop"></div>
+    <div id="skillProgression" class="skill-shop"></div><div id="skillShop" class="skill-shop"></div>
     <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA MISSÕES</button></div>
   </section>
 </div>
@@ -1090,6 +1090,10 @@ async function renderDashboard(){
     const tree=skills.skill_tree_nome||"Técnica não escolhida";
     document.getElementById("dashboardTree").textContent="🌳 "+tree;
     document.getElementById("dashXP").textContent=data.xp??0;
+    const prog=data.progresso||{};
+    document.getElementById("dashboardGrade").textContent=prog.grade||"Grade 4";
+    document.getElementById("dashboardConsistencia").textContent=(Number(prog.score||0)).toFixed(0)+"%";
+    document.getElementById("dashboardDias").textContent=(Number(prog.dias||0)).toFixed(1);
     const d=profile.dias||{};
     ["corpo","mente","alma"].forEach(cls=>{
       const n=Number(d[cls]||0);
@@ -1110,7 +1114,7 @@ function renderDashboardTasks(){
   const missionBox=document.getElementById("dashboardMissoes"), votoBox=document.getElementById("dashboardVotos");
   const item=(t,idx)=>`<div class="dashboard-mission ${t.classe} ${t.concluida?'done':''}"><input type="checkbox" ${t.concluida?'checked':''} ${t.id?'':'disabled'} onchange="concluirTarefa(${idx})"><div><div class="mission-title">${escaparXml(t.texto)}</div><div class="mission-meta">${nomeClasse(t.classe)} • ${nomesDias(t.frequencia)}</div></div><button class="main-btn red-btn" style="padding:8px 10px" onclick="excluirTarefa(${idx})">×</button></div>`;
   missionBox.innerHTML=missoes.length?missoes.map(t=>item(t,tarefas.indexOf(t))).join(""):'<div class="dashboard-empty">Nenhuma missão para hoje. Crie uma e avance sua jornada.</div>';
-  votoBox.innerHTML=votos.length?votos.map(t=>`<div class="dashboard-voto"><div class="voto-title">⛓️ ${escaparXml(t.texto)}</div><div class="voto-bonus">${nomeClasse(t.classe)} • Bônus atual: +0,5 • ${t.concluida?'✓ cumprido hoje':'aguardando cumprimento'}</div><div style="margin-top:10px"><input type="checkbox" ${t.concluida?'checked':''} ${t.id?'':'disabled'} onchange="concluirTarefa(${tarefas.indexOf(t)})"> Marcar como cumprido</div></div>`).join(""):'<div class="dashboard-empty">Nenhum voto vinculativo ativo.</div>';
+  votoBox.innerHTML=votos.length?votos.map(t=>`<div class="dashboard-voto"><div class="voto-title">⛓️ ${escaparXml(t.texto)}</div><div class="voto-bonus">${nomeClasse(t.classe)} • Poder: +0,5 atributo • crescimento acelerado • quebrar o voto zera o progresso • ${t.concluida?'✓ cumprido hoje':'aguardando cumprimento'}</div><div style="margin-top:10px"><input type="checkbox" ${t.concluida?'checked':''} ${t.id?'':'disabled'} onchange="concluirTarefa(${tarefas.indexOf(t)})"> Marcar como cumprido</div></div>`).join(""):'<div class="dashboard-empty">Nenhum voto vinculativo ativo.</div>';
 }
 
 
@@ -1443,13 +1447,15 @@ async function abrirSkills(){
   const box=document.getElementById('skillShop');
   try{
     const data=await api('/api/skills');
-    const cats={ofensiva:'⚔️ OFENSIVAS',espacial:'🌀 ESPACIAIS',defensiva:'🛡️ DEFENSIVAS',controle:'⛓️ CONTROLE',alma:'👁️ ALMA',invocacao:'🐺 INVOCAÇÕES',reforco:'✨ REFORÇOS',versatil:'🔄 VERSÁTEIS',especial:'🧿 ESPECIAIS',anulacao:'🚫 ANULAÇÃO',maxima:'💥 TÉCNICAS MÁXIMAS',reversa:'🔁 TÉCNICAS REVERSAS',dominio:'🌀 EXPANSÕES DE DOMÍNIO'};
+    const cats={ofensiva:'⚔️ OFENSIVAS',espacial:'🌀 ESPACIAIS',defensiva:'🛡️ DEFENSIVAS',controle:'⛓️ CONTROLE',alma:'👁️ ALMA',invocacao:'🐺 INVOCAÇÕES',reforco:'✨ REFORÇOS',versatil:'🔄 VERSÁTEIS',especial:'🧿 ESPECIAIS',anulacao:'🚫 ANULAÇÃO',maxima:'💥 TÉCNICAS MÁXIMAS',reversa:'🔁 TÉCNICAS REVERSAS'};
     const treeBanner=data.skill_tree?`<div class="skill-card"><h2>🌳 ${escaparXml(data.skill_tree_nome)}</h2><p>${escaparXml(data.skill_tree_descricao||'')} </p><p><b>Regra:</b> este personagem só pode desbloquear técnicas desta árvore.</p></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a loja.</p></div>`;
     const grupos=Object.entries(cats).map(([cat,title])=>{
-      const items=data.skills.filter(x=>x.categoria===cat && !x.adquirida && x.mesma_arvore);
+      const items=data.skills.filter(x=>x.categoria===cat && x.tipo!=='domain' && !x.adquirida && x.mesma_arvore);
       if(!items.length)return '';
       return `<div class="skill-group"><h2>${title}</h2><div class="skill-grid">${items.map(x=>{const req=x.prerequisitos&&x.prerequisitos.length?`<div class="skill-meta">🔒 Requer: <b>${x.prerequisitos.map(id=>(data.skills.find(y=>y.id===id)||{}).nome||id).join(', ')}</b></div>`:'';return `<div class="skill-card"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> • DANO: <b>${x.dano}</b> • 💰 <b>${x.preco_xp} XP</b></div>${req}<div class="skill-effect">${x.efeito}</div><button class="main-btn purple-btn" onclick="comprarSkill('${x.id}')" ${x.pode_comprar?'':'disabled'}>${x.pode_comprar?'DESBLOQUEAR':'BLOQUEADA'}</button></div>`;}).join('')}</div></div>`;
     }).join('');
+    const domainHtml=(data.domains||[]).map(d=>`<div class="skill-card"><h2>🌀 ${escaparXml(d.nome)}</h2><div class="skill-meta">🌳 Nó final da Skill Tree • ${escaparXml(d.requisito)}</div><div class="skill-effect">${escaparXml(d.efeito)}</div><p><b>${d.desbloqueada?'✓ DOMÍNIO DESBLOQUEADO':'🔒 DOMÍNIO BLOQUEADO'}</b></p></div>`).join('');
+    document.getElementById('skillProgression').innerHTML=domainHtml?`<div class="skill-group"><h2>🌀 PROGRESSÃO — DOMÍNIO</h2><p style="opacity:.8">O domínio não é comprado. Ele é conquistado ao chegar à Grade 1 e dominar todas as técnicas anteriores da sua árvore.</p><div class="skill-grid">${domainHtml}</div></div>`:'';
     const owned=data.skills.filter(x=>x.adquirida);
     const eq=owned.filter(x=>x.equipada).reduce((n,x)=>n+x.ct,0);
     const ownHtml=owned.length?`<div class="skill-group"><h2>🎒 MINHAS SKILLS</h2><div class="skill-grid">${owned.map(x=>`<div class="skill-card ${x.equipada?'skill-equipped':''}"><h3>${x.nome}</h3><div class="skill-meta">CT: <b>${x.ct}</b> • CE: <b>${x.ce}</b> • DANO: <b>${x.dano}</b></div><div class="skill-effect">${x.efeito}</div><button class="main-btn ${x.equipada?'blue-btn':'purple-btn'}" onclick="alternarSkill('${x.id}')">${x.equipada?'DESEQUIPAR':'EQUIPAR'}</button></div>`).join('')}</div></div>`:'';
