@@ -19,8 +19,70 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax')
 CLASSES = ('corpo', 'mente', 'alma')
-BACKUP_BASE_DATE = date(2026, 9, 5)
-BACKUP_CYCLE_DAYS = 30
+
+# Progressão fixa: os números não explodem com o tempo.
+GRADE_STATS = [
+    ('Grade 4', 0, 70, 250, 3),
+    ('Grade 3', 7, 90, 400, 4),
+    ('Grade 2', 30, 115, 550, 6),
+    ('Grade 1', 90, 150, 750, 8),
+    ('Special Grade', 180, 200, 1000, 10),
+]
+
+# Identidade visual da Skill Tree. As imagens são referências externas; o site
+# continua funcionando mesmo se uma imagem externa estiver indisponível.
+TREE_META = {
+ 'shrine': ('Ryomen Sukuna','Tenha orgulho, você é forte.','https://static.zerochan.net/Sukuna.full.3814718.jpg','Malevolent Shrine'),
+ 'limitless': ('Satoru Gojo','No céu e na terra, apenas eu sou o honrado.','https://static.zerochan.net/Gojou.Satoru.full.3974287.jpg','Unlimited Void'),
+ 'ten-shadows': ('Megumi Fushiguro','Com minha própria vida, salvarei as pessoas de forma desigual.','https://static.zerochan.net/Megumi.Fushiguro.full.3233980.jpg','Chimera Shadow Garden'),
+ 'cursed-spirit-manipulation': ('Suguru Geto','Você é o mais forte porque é Satoru Gojo?','https://static.zerochan.net/Suguru.Getou.full.3587532.jpg','Womb Profusion'),
+ 'idle-transfiguration': ('Mahito','A vida não tem peso ou valor particular.','https://static.zerochan.net/Mahito.full.3679477.jpg','Self-Embodiment of Perfection'),
+ 'straw-doll': ('Nobara Kugisaki','Eu sou Nobara Kugisaki.','https://static.zerochan.net/Kugisaki.Nobara.full.3522408.jpg','—'),
+ 'ratio': ('Kento Nanami','Trabalho é uma merda.','https://static.zerochan.net/Nanami.Kento.full.3574668.jpg','—'),
+ 'projection': ('Naobito Zenin','Eu sou o feiticeiro mais rápido da família Zenin.','https://static.zerochan.net/Naobito.Zenin.full.3518074.jpg','—'),
+ 'blood': ('Choso','Eu sou seu irmão mais velho.','https://static.zerochan.net/Choso.full.3769572.jpg','—'),
+ 'boogie-woogie': ('Aoi Todo','O ato do aplauso é uma aclamação da alma!','https://static.zerochan.net/Toudou.Aoi.full.3595620.jpg','—'),
+ 'cursed-speech': ('Toge Inumaki','Salmão.','https://static.zerochan.net/Inumaki.Toge.full.3572672.jpg','—'),
+ 'copy': ('Yuta Okkotsu','Rika.','https://static.zerochan.net/Okkotsu.Yuuta.full.3814945.jpg','Authentic Mutual Love'),
+ 'construction': ('Yorozu','Eu vou me casar com você.','https://static.zerochan.net/Yorozu.full.3884581.jpg','Threefold Affliction'),
+ 'star-rage': ('Yuki Tsukumo','Que tipo de garota você gosta?','https://static.zerochan.net/Tsukumo.Yuki.full.3741404.jpg','—'),
+ 'sky': ('Takako Uro','Eu odeio a luz do sol.','https://static.zerochan.net/Uro.Takako.full.3895237.jpg','—'),
+ 'granite-blast': ('Ryu Ishigori','A vida não tem sabor.','https://static.zerochan.net/Ishigori.Ryu.full.3794875.jpg','—'),
+ 'comedian': ('Fumihiko Takaba','Se eu não achar engraçado, não tem graça.','https://static.zerochan.net/Takaba.Fumihiko.full.3879420.jpg','—'),
+ 'technique-extinguishment': ('Hana Kurusu / Angel','Devolva Megumi para mim!','https://static.zerochan.net/Kurusu.Hana.full.3825632.jpg','Jacob’s Ladder'),
+ 'inverse': ('Jiro Awasaka','Eu sou um homem que sobrevive.','https://static.zerochan.net/Awasaka.Jiro.full.3471446.jpg','—'),
+ 'seance': ('Ogami','Eu trouxe de volta um feiticeiro.','https://static.zerochan.net/Ogami.full.3491297.jpg','—'),
+ 'puppet': ('Kokichi Muta','Encontre sua felicidade.','https://static.zerochan.net/Muta.Kokichi.full.3478074.jpg','—'),
+ 'auspicious-beasts': ('Takuma Ino','Eu vou dar o meu melhor.','https://static.zerochan.net/Ino.Takuma.full.3577997.jpg','—'),
+ 'rot': ('Eso','Nós somos irmãos.','https://static.zerochan.net/Eso.full.3486672.jpg','—'),
+ 'cloning': ('Bata-bata','Uma técnica pode ser usada de muitas formas.','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','—'),
+ 'miracles': ('Haruta Shigemo','Eu sempre tive sorte.','https://static.zerochan.net/Shigemo.Haruta.full.3513412.jpg','—'),
+ 'ice': ('Uraume','Sukuna-sama.','https://static.zerochan.net/Uraume.full.3801224.jpg','—'),
+ 'disaster-flames': ('Jogo','Eu sou um espírito amaldiçoado.','https://static.zerochan.net/Jougo.full.3552467.jpg','Coffin of the Iron Mountain'),
+ 'disaster-plants': ('Hanami','Os humanos precisam desaparecer.','https://static.zerochan.net/Hanami.full.3485955.jpg','—'),
+ 'disaster-tides': ('Dagon','Eu nasci do medo do mar.','https://static.zerochan.net/Dagon.full.3550937.jpg','Horizon of the Captivating Skandha'),
+ 'contractual-recreation': ('Reggie Star','Eu não sou um homem de promessas vazias.','https://static.zerochan.net/Reggie.Star.full.3825626.jpg','—'),
+ 'love-rendezvous': ('Kirara Hoshi','Eu não quero perder meu tempo.','https://static.zerochan.net/Hoshi.Kirara.full.3840985.jpg','—'),
+ 'solo-forbidden-area': ('Utahime Iori','Não subestime os feiticeiros de Kyoto.','https://static.zerochan.net/Iori.Utahime.full.3577957.jpg','—'),
+ 'black-bird': ('Mei Mei','Dinheiro é tudo que importa.','https://static.zerochan.net/Mei.Mei.full.3577958.jpg','—'),
+ 'mythical-beast-amber': ('Hajime Kashimo','Eu estava esperando por você.','https://static.zerochan.net/Kashimo.Hajime.full.3852290.jpg','—'),
+ 'prayer-song': ('Yasohachi Bridge User','Oração é a força de uma vontade.','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','—'),
+ 'antigravity': ('Kenjaku','A evolução humana é fascinante.','https://static.zerochan.net/Kenjaku.full.3791075.jpg','Womb Profusion'),
+ 'light': ('Miguel','Eu não tenho tempo para isso.','https://static.zerochan.net/Miguel.full.3902188.jpg','—'),
+ 'smallpox': ('Smallpox Deity','—','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','Smallpox Deity Domain'),
+ 'deadly-sentencing': ('Hiromi Higuruma','Confie no julgamento.','https://static.zerochan.net/Higuruma.Hiromi.full.3847165.jpg','Deadly Sentencing'),
+ 'idle-death-gamble': ('Kinji Hakari','Jackpot!','https://static.zerochan.net/Hakari.Kinji.full.3823831.jpg','Idle Death Gamble'),
+ 'womb-profusion': ('Kenjaku','A evolução humana é fascinante.','https://static.zerochan.net/Kenjaku.full.3791075.jpg','Womb Profusion'),
+ 'threefold-affliction': ('Yorozu','Eu vou me casar com você.','https://static.zerochan.net/Yorozu.full.3884581.jpg','Threefold Affliction'),
+ 'authentic-mutual-love': ('Yuta Okkotsu','Rika.','https://static.zerochan.net/Okkotsu.Yuuta.full.3814945.jpg','Authentic Mutual Love'),
+ 'hanami-domain': ('Hanami','Os humanos precisam desaparecer.','https://static.zerochan.net/Hanami.full.3485955.jpg','Domain Expansion'),
+ 'dabura-domain': ('Dabura','Eu sou o rei do submundo.','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','Domain Expansion'),
+ 'yuji-domain': ('Yuji Itadori','Eu sou só um feiticeiro.','https://static.zerochan.net/Itadori.Yuuji.full.3974286.jpg','Domain Expansion'),
+}
+
+DOMAIN_TREES = {k:v[3] for k,v in TREE_META.items() if v[3] != '—'}
+SKILL_TREE_NAMES = {"antigravity": "Antigravity System", "auspicious-beasts": "Auspicious Beasts Summon", "authentic-mutual-love": "Authentic Mutual Love Domain", "black-bird": "Black Bird Manipulation", "blood": "Blood Manipulation", "boogie-woogie": "Boogie Woogie", "cloning": "Cloning Technique", "comedian": "Comedian", "construction": "Construction", "contractual-recreation": "Contractual Re-Creation", "copy": "Copy", "cursed-speech": "Cursed Speech", "cursed-spirit-manipulation": "Cursed Spirit Manipulation", "dabura-domain": "Dabura Domain", "deadly-sentencing": "Deadly Sentencing Domain", "disaster-flames": "Disaster Flames", "disaster-plants": "Disaster Plants", "disaster-tides": "Disaster Tides", "granite-blast": "Granite Blast", "hanami-domain": "Hanami Domain", "ice": "Ice Formation", "idle-death-gamble": "Idle Death Gamble Domain", "idle-transfiguration": "Idle Transfiguration", "inverse": "Inverse", "light": "Light", "limitless": "Limitless", "love-rendezvous": "Love Rendezvous", "miracles": "Miracles", "mythical-beast-amber": "Mythical Beast Amber", "prayer-song": "Prayer Song", "projection": "Projection Sorcery", "puppet": "Puppet Manipulation", "ratio": "Ratio Technique", "rot": "Rot Technique", "seance": "Séance Technique", "shrine": "Shrine", "sky": "Sky Manipulation", "smallpox": "Smallpox Deity Domain", "solo-forbidden-area": "Solo Forbidden Area", "star-rage": "Star Rage", "straw-doll": "Straw Doll Technique", "technique-extinguishment": "Technique Extinguishment", "ten-shadows": "Ten Shadows Technique", "threefold-affliction": "Threefold Affliction Domain", "womb-profusion": "Womb Profusion Domain", "yuji-domain": "Yuji Domain"}
+SKILL_TREE_OPTIONS_TEXT = {k:v for k,v in SKILL_TREE_NAMES.items()}
 
 SKILLS = [
 ('bola-fogo','Bola de Fogo','elementar',2,10,'1d6 de dano.'),('explosao-ignea','Explosão Ígnea','elementar',3,25,'2d4 de dano.'),('muralha-fogo','Muralha de Fogo','elementar',3,20,'1d4 de dano por 3 turnos.'),('incinerar','Incinerar','elementar',4,40,'2d6 de dano.'),('chama-negra','Chama Negra','elementar',5,50,'2d6 de dano e ignora parte da defesa.'),
@@ -38,13 +100,13 @@ SKILLS = [
 
 
 ENTITY_GRADES = [
-    {'grade':'Grade 4','min_streak':0,'chance':1.00,'hp':('20','d4'),'damage':('0','d4'),'ct':0},
-    {'grade':'Grade 3','min_streak':30,'chance':0.50,'hp':('30','d6'),'damage':('0','d6'),'ct':1},
-    {'grade':'Grade 2','min_streak':60,'chance':1/3,'hp':('50','2d4'),'damage':('0','2d4'),'ct':2},
-    {'grade':'Grade 1','min_streak':90,'chance':0.25,'hp':('80','2d6'),'damage':('0','2d6'),'ct':3},
-    {'grade':'Special Grade','min_streak':120,'chance':0.20,'hp':('120','2d6'),'damage':('4','2d6'),'ct':4},
-    {'grade':'Calamity Grade','min_streak':150,'chance':0.16,'hp':('188','2d6'),'damage':('8','2d6'),'ct':5},
+    {'grade':g,'min_streak':d,'chance':1.0,'hp':hp,'damage':('4','0'),'ce':ce,'ct':ct}
+    for g,d,hp,ce,ct in [
+        ('Grade 4',0,70,250,3),('Grade 3',7,90,400,4),('Grade 2',30,115,550,6),
+        ('Grade 1',90,150,750,8),('Special Grade',180,200,1000,10)
+    ]
 ]
+
 
 def roll_dice(expr):
     import random, re
@@ -80,13 +142,19 @@ class PostgresDB:
             statement=statement.strip()
             if statement: self.cur.execute(statement)
 
+
+def ensure_pvp_challenges(c):
+    c.execute('CREATE TABLE IF NOT EXISTS pvp_challenges(id INTEGER PRIMARY KEY AUTOINCREMENT, challenger_id INTEGER NOT NULL, challenged_id INTEGER NOT NULL, status TEXT NOT NULL DEFAULT \'pending\', created_at TEXT DEFAULT CURRENT_TIMESTAMP, battle_id INTEGER, FOREIGN KEY(challenger_id) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY(challenged_id) REFERENCES users(id) ON DELETE CASCADE)')
+    try: c.execute('CREATE INDEX IF NOT EXISTS pvp_challenges_challenged_status_idx ON pvp_challenges(challenged_id,status)')
+    except Exception: pass
+
 def db():
     if DATABASE_URL:
         if psycopg2 is None: raise RuntimeError('DATABASE_URL está configurada, mas psycopg2-binary não está instalado.')
         url=DATABASE_URL
         if 'sslmode=' not in url: url += ('&' if '?' in url else '?') + 'sslmode=require'
-        return PostgresDB(psycopg2.connect(url))
-    c=sqlite3.connect(DB_PATH); c.row_factory=sqlite3.Row; c.execute('PRAGMA foreign_keys=ON'); return c
+        c=PostgresDB(psycopg2.connect(url)); ensure_pvp_challenges(c); c.commit(); return c
+    c=sqlite3.connect(DB_PATH); c.row_factory=sqlite3.Row; c.execute('PRAGMA foreign_keys=ON'); ensure_pvp_challenges(c); c.commit(); return c
 
 def insert_and_get_id(c, sql, params):
     if DATABASE_URL:
@@ -106,7 +174,7 @@ def init_db():
         c.executescript('''
         CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
         CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
-        CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body DOUBLE PRECISION NOT NULL DEFAULT 0,mind DOUBLE PRECISION NOT NULL DEFAULT 0,soul DOUBLE PRECISION NOT NULL DEFAULT 0,class_name TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body DOUBLE PRECISION NOT NULL DEFAULT 0,mind DOUBLE PRECISION NOT NULL DEFAULT 0,soul DOUBLE PRECISION NOT NULL DEFAULT 0,class_name TEXT,skill_tree TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS tasks(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
@@ -117,10 +185,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
+        c.execute('ALTER TABLE characters ADD COLUMN IF NOT EXISTS skill_tree TEXT')
     else:
         c.executescript('''
         CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
-        CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body REAL NOT NULL DEFAULT 0,mind REAL NOT NULL DEFAULT 0,soul REAL NOT NULL DEFAULT 0,class_name TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body REAL NOT NULL DEFAULT 0,mind REAL NOT NULL DEFAULT 0,soul REAL NOT NULL DEFAULT 0,class_name TEXT,skill_tree TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
@@ -195,8 +264,49 @@ def current_day_streaks(c,uid,base):
             out[cls]['dias']=int(out[cls]['dias'])+1
     return out
 
+def _created_date(u):
+    raw=str(u['created_at'])[:10]
+    try:return date.fromisoformat(raw)
+    except Exception:return today()
+
+def progression_for(c,u):
+    created=_created_date(u); elapsed=max(0,(today()-created).days)
+    tasks=get_tasks(c,u['id'])
+    # Consistência = compromissos realmente assumidos e cumpridos; dias sem
+    # compromisso não contam contra o jogador.
+    due=done=0
+    broken_vote=False
+    d=created
+    yesterday=today()-timedelta(days=1)
+    while d<=yesterday:
+        wd=d.weekday(); completed=completion_set(c,u['id'],iso(d))
+        for t in tasks:
+            if wd not in t['frequencia']: continue
+            due+=1
+            if t['id'] in completed: done+=1
+            elif t['tipo']=='voto': broken_vote=True
+        d+=timedelta(days=1)
+    score=round((done/due)*100,1) if due else 0.0
+    # Quebrar qualquer voto vinculativo concluído/previsto no passado zera o
+    # ciclo de progressão. O dia de hoje só é avaliado ao terminar.
+    if broken_vote:
+        return {'grade':'Grade 4','score':0.0,'dias':0,'tenure':elapsed,'next':'Grade 3','broken_vote':True,'hp':70,'ce':250,'ct':3}
+    grade=GRADE_STATS[0]
+    for g,min_days,hp,ce,ct in GRADE_STATS:
+        if elapsed>=min_days and score >= ({'Grade 4':0,'Grade 3':70,'Grade 2':75,'Grade 1':80,'Special Grade':85}[g]):
+            grade=(g,min_days,hp,ce,ct)
+    idx=[x[0] for x in GRADE_STATS].index(grade[0]); nxt=GRADE_STATS[min(idx+1,len(GRADE_STATS)-1)]
+    return {'grade':grade[0],'score':score,'dias':elapsed,'tenure':elapsed,'next':nxt[0],'broken_vote':False,'hp':grade[2],'ce':grade[3],'ct':grade[4]}
+
+def tree_payload(tree_id):
+    m=TREE_META.get(tree_id)
+    if not m:return None
+    return {'id':tree_id,'nome':SKILL_TREE_NAMES.get(tree_id,tree_id),'descricao':f'Técnica amaldiçoada associada a {m[0]}.','personagem':m[0],'frase':m[1],'imagem':m[2],'dominio':m[3]}
+
 def user_payload(u):
-    c=db(); process_until_yesterday(c,u); tasks=[t for t in get_tasks(c,u['id']) if today().weekday() in t['frequencia']]; done=completion_set(c,u['id'],iso(today()))
+    c=db(); process_until_yesterday(c,u)
+    tasks=[t for t in get_tasks(c,u['id']) if today().weekday() in t['frequencia']]
+    done=completion_set(c,u['id'],iso(today()))
     for t in tasks:t['concluida']=t['id'] in done
     s={k:dict(v) for k,v in DEFAULT_STREAKS.items()}
     for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):s[r['class']]={'dias':r['days'],'ultimoDia':r['last_day']}
@@ -205,8 +315,10 @@ def user_payload(u):
     base={'body':float(ch['body'] or 0),'mind':float(ch['mind'] or 0),'soul':float(ch['soul'] or 0)} if ch else {'body':0.0,'mind':0.0,'soul':0.0}
     bonus={x:0.0 for x in CLASSES}
     for r in c.execute('SELECT class,bonus FROM vote_bonuses WHERE user_id=?',(u['id'],)):bonus[r['class']]=float(r['bonus'])
-    c.commit(); c.close()
-    return {'tarefas':tasks,'streaks':s,'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name']},'votoBonus':bonus}
+    prog=progression_for(c,u)
+    tree_id=(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None)
+    c.commit();c.close()
+    return {'usuario':u['username'],'xp':int(u['xp'] or 0),'tarefas':tasks,'streaks':s,'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name'],'skill_tree':tree_id},'votoBonus':bonus,'progresso':prog,'skill_tree':tree_payload(tree_id)}
 
 @app.get('/')
 def index():return send_file(os.path.join(BASE_DIR,'index.html'))
@@ -249,21 +361,6 @@ def require_admin():
         return False,(jsonify(error='Acesso administrativo necessário.'),403)
     return True,None
 
-@app.get('/api/admin/backup-reminder')
-def admin_backup_reminder():
-    ok,err=require_admin()
-    if not ok:return err
-    today=date.today()
-    if today <= BACKUP_BASE_DATE:
-        next_due=BACKUP_BASE_DATE
-        cycles_elapsed=0
-    else:
-        elapsed=(today-BACKUP_BASE_DATE).days
-        cycles_elapsed=(elapsed + BACKUP_CYCLE_DAYS - 1)//BACKUP_CYCLE_DAYS
-        next_due=BACKUP_BASE_DATE + timedelta(days=cycles_elapsed*BACKUP_CYCLE_DAYS)
-    days_until=(next_due-today).days
-    return jsonify(base_date=iso(BACKUP_BASE_DATE),cycle_days=BACKUP_CYCLE_DAYS,next_due=iso(next_due),days_until=days_until,overdue=days_until<0)
-
 def admin_delete_user(c, uid):
     c.execute('DELETE FROM battles WHERE player1=? OR player2=?',(uid,uid))
     c.execute('DELETE FROM users WHERE id=?',(uid,))
@@ -279,7 +376,14 @@ def admin_users():
     ok,err=require_admin()
     if not ok:return err
     c=db(); rows=c.execute('SELECT id,username,created_at,xp FROM users ORDER BY username').fetchall();c.close()
-    return jsonify([{'id':r['id'],'usuario':r['username'],'criado_em':str(r['created_at']),'xp':int(r['xp'] or 0)} for r in rows])
+    from datetime import datetime
+    base=date(2026,9,5)
+    today_local=today()
+    elapsed=max(0,(today_local-base).days)
+    cycles=(elapsed//30)+1 if elapsed>=0 else 0
+    next_backup=base+timedelta(days=30*cycles)
+    return jsonify({'usuarios':[{'id':r['id'],'usuario':r['username'],'criado_em':str(r['created_at']),'xp':int(r['xp'] or 0)} for r in rows],
+                    'backup':{'inicio':'2026-09-05','proximo':iso(next_backup),'ciclo_dias':30,'atrasado':today_local>=next_backup}})
 
 @app.delete('/api/admin/users/<int:uid>')
 def admin_delete_user_route(uid):
@@ -296,7 +400,7 @@ def admin_export_sql():
     if not ok:return err
     if not DATABASE_URL:return jsonify(error='Exportação SQL administrativa está disponível para PostgreSQL.'),400
     tables=['users','characters','tasks','completions','streaks','vote_bonuses','user_skills','battles','hunts','entity_battles','pvp_daily']
-    c=db(); lines=['-- A Travessia PostgreSQL backup','-- Gerado pelo painel ADM','-- Importe somente em uma base do A Travessia.','','TRUNCATE TABLE '+', '.join(tables)+' CASCADE;']
+    c=db(); lines=['-- Cursed Mission PostgreSQL backup','-- Gerado pelo painel ADM','-- Importe somente em uma base do A Travessia.','','TRUNCATE TABLE '+', '.join(tables)+' CASCADE;']
     for table in tables:
         rows=c.execute(f'SELECT * FROM {table}').fetchall()
         if not rows:continue
@@ -383,9 +487,12 @@ def complete_task(task_id):
 def save_character():
     u,err=require_user()
     if err:return err
-    p=(request.get_json(silent=True) or {}).get('personagem',{}) or {};body=float(p.get('body',0));mind=float(p.get('mind',0));soul=float(p.get('soul',0));cls=str(p.get('classe',''))
+    p=(request.get_json(silent=True) or {}).get('personagem',{}) or {};body=float(p.get('body',0));mind=float(p.get('mind',0));soul=float(p.get('soul',0));cls=str(p.get('classe',''));tree=str(p.get('skill_tree',''))
     if any(x<0 or x>3 for x in (body,mind,soul)) or abs(body+mind+soul-3)>0.001:return jsonify(error='A distribuição inicial precisa somar exatamente 3 pontos.'),400
-    c=db();c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name) VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name',(u['id'],body,mind,soul,cls));c.commit();c.close();return jsonify(ok=True)
+    if tree not in TREE_META:return jsonify(error='Escolha uma Skill Tree válida.'),400
+    c=db();old=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone()
+    if old and old['skill_tree'] and old['skill_tree']!=tree:c.close();return jsonify(error='A Skill Tree não pode ser trocada depois da criação.'),400
+    c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name,skill_tree) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name,skill_tree=COALESCE(characters.skill_tree,excluded.skill_tree)',(u['id'],body,mind,soul,cls,tree));c.commit();c.close();return jsonify(ok=True)
 
 def attributes_for(c,uid):
     ch=c.execute('SELECT * FROM characters WHERE user_id=?',(uid,)).fetchone();base={'body':0.0,'mind':0.0,'soul':0.0} if not ch else {'body':float(ch['body'] or 0),'mind':float(ch['mind'] or 0),'soul':float(ch['soul'] or 0)};bonus={x:0.0 for x in CLASSES}
@@ -394,8 +501,10 @@ def attributes_for(c,uid):
     return base,bonus,eff,ch
 
 def stats_for(attrs,days):
-    days=max(1,int(days or 1));F=lambda a:30/((1+(a*a)/10)*days+30);fb,fm,fs=F(attrs['body']),F(attrs['mind']),F(attrs['soul'])
-    return {'F':{'corpo':fb,'mente':fm,'alma':fs},'HP':200*(1-fb),'CE':1000*(1-fs),'CT':1/fm}
+    # Compatibilidade para chamadas antigas: a escala agora é determinada pelo grau.
+    d=max(0,int(days or 0)); g='Special Grade' if d>=180 else 'Grade 1' if d>=90 else 'Grade 2' if d>=30 else 'Grade 3' if d>=7 else 'Grade 4'
+    row=next(x for x in GRADE_STATS if x[0]==g)
+    return {'F':{},'HP':row[2],'CE':row[3],'CT':row[4]}
 
 @app.get('/api/profile')
 def profile():
@@ -403,21 +512,30 @@ def profile():
     if err:return err
     c=db();process_until_yesterday(c,u);vals={x:{'dias':0,'ultimoDia':None} for x in CLASSES}
     for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):vals[r['class']]={'dias':int(r['days']),'ultimoDia':r['last_day']}
-    vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch=attributes_for(c,u['id']);stats=stats_for(eff,max(days.values()) if max(days.values()) else 1);c.commit();c.close()
-    return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats)
+    vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch=attributes_for(c,u['id']);prog=progression_for(c,u); stats={'HP':prog['hp'],'CE':prog['ce'],'CT':prog['ct']}; tree=tree_payload(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None);c.commit();c.close()
+    return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats,progresso=prog,skill_tree=tree)
 
 @app.get('/api/skills')
 def skills():
     u,err=require_user()
     if err:return err
     c=db(); owned={r['skill_id']:bool(r['equipped']) for r in c.execute('SELECT skill_id,equipped FROM user_skills WHERE user_id=?',(u['id'],))}
-    xp=int(u['xp'] or 0); ct=current_ct(c,u['id'])
+    xp=int(u['xp'] or 0); prog=progression_for(c,u); ct=prog['ct']
+    ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone(); tree_id=ch['skill_tree'] if ch else None
+    meta=tree_payload(tree_id)
     out=[]
+    # O catálogo antigo continua disponível para compatibilidade do combate; a
+    # interface agora apresenta a identidade da árvore e não transforma domínio em compra.
     for sid,name,cat,skill_ct,ce,effect in SKILLS:
         cost={1:50,2:100,3:175,4:275,5:400}[skill_ct]
         acquired=sid in owned
         out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':(not acquired and skill_ct<=ct and xp>=cost),'equipada':owned.get(sid,False)})
-    c.close();return jsonify(skills=out,xp=xp,ct=ct)
+    power=vote_power_multiplier(c,u['id'])
+    domains=[]
+    if meta and meta['dominio']!='—':
+        unlocked=prog['grade'] in ('Grade 1','Special Grade')
+        domains=[{'nome':meta['dominio'],'efeito':'Nó final da sua Skill Tree. Não é comprado com XP.','requisito':'Grade 1 + domínio das técnicas anteriores','desbloqueada':unlocked}]
+    c.close();return jsonify(skills=out,xp=xp,ct=ct,skill_tree=tree_id,skill_tree_nome=meta['nome'] if meta else None,skill_tree_descricao=(SKILL_TREE_OPTIONS_TEXT.get(tree_id) if tree_id else None),tree_meta=meta,progresso=prog,domains=domains,poder_voto=power)
 
 @app.post('/api/skills/<skill_id>/buy')
 def buy_skill(skill_id):
@@ -448,8 +566,15 @@ def toggle_skill(skill_id):
     if total>current_ct(c,u['id']):c.close();return jsonify(error='Você não possui CT suficiente para equipar essa combinação.'),400
     equipped=[r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],))];c.close();return jsonify(ok=True,equipadas=equipped)
 
+def vote_power_multiplier(c,uid):
+    # Cada voto vinculativo ativo aumenta o poder de combate em 10%.
+    n=int(c.execute('SELECT COUNT(*) AS n FROM vote_bonuses WHERE user_id=?',(uid,)).fetchone()['n'] or 0)
+    return 1.0 + 0.10*n
+
 def current_ct(c,uid):
-    ch=c.execute('SELECT * FROM characters WHERE user_id=?',(uid,)).fetchone();mind=float(ch['mind'] or 0) if ch else 0;bonus=float(c.execute("SELECT COALESCE(SUM(bonus),0) b FROM vote_bonuses WHERE user_id=? AND class='mente'",(uid,)).fetchone()['b']);attrs={'body':0,'mind':mind+bonus,'soul':0};days=max([int(r['days']) for r in c.execute('SELECT days FROM streaks WHERE user_id=?',(uid,))] or [1]);return stats_for(attrs,days)['CT']
+    u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
+    if not u:return 3
+    return progression_for(c,u)['ct']
 
 @app.get('/api/leaderboard')
 def leaderboard():
@@ -475,21 +600,22 @@ def battle_stats(c,uid):
 def entities():
     u,err=require_user()
     if err:return err
-    c=db(); days=max([int(r['days']) for r in c.execute('SELECT days FROM streaks WHERE user_id=?',(u['id'],))] or [0]); import random
+    c=db(); prog=progression_for(c,u); days=prog['dias']; import random
     row=c.execute('SELECT entities_json FROM hunts WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone()
     if row:
         out=json.loads(row['entities_json']); c.close(); return jsonify(usou=True,entidades=out,streak=days)
-    eligible=[g for g in ENTITY_GRADES if days>=g['min_streak']]
+    rank={'Grade 4':0,'Grade 3':1,'Grade 2':2,'Grade 1':3,'Special Grade':4}.get(prog['grade'],0)
+    eligible=[g for g in ENTITY_GRADES if {'Grade 4':0,'Grade 3':1,'Grade 2':2,'Grade 1':3,'Special Grade':4}.get(g['grade'],0)<=rank]
     out=[]
     for g in eligible:
         if g['grade']=='Grade 4' or random.random()<=g['chance']:
-            hp=roll_dice(g['hp'][0]+'+'+g['hp'][1]); damage=roll_dice(g['damage'][0]+'+'+g['damage'][1])
+            hp=int(g['hp']); damage=roll_dice(g['damage'][0]+'+'+g['damage'][1])
             pool=[x for x in SKILLS if x[3]<=g['ct']]
             skills=[]
             if g['ct']==1 and pool: skills=[random.choice(pool)]
             elif g['ct']>=2 and pool:
                 skills=random.sample(pool,min(len(pool),random.randint(1,min(3,len(pool)))))
-            out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage':damage,'ct':g['ct'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ce':x[4],'efeito':skill_dict(x[0])['efeito']} for x in skills]})
+            out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage':damage,'ct':g['ct'],'ce':g['ce'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ce':x[4],'efeito':skill_dict(x[0])['efeito']} for x in skills]})
     c.execute('INSERT INTO hunts(user_id,day,entities_json) VALUES(?,?,?)',(u['id'],iso(today()),json.dumps(out,ensure_ascii=False)));c.commit();c.close()
     return jsonify(usou=True,entidades=out,streak=days)
 
@@ -549,8 +675,9 @@ def entity_battle_action(bid):
         elif '1d6' in sk['efeito']:dmg=random.randint(1,6)
         elif '1d4' in sk['efeito']:dmg=random.randint(1,4)
         dmg += sk['ct'] if sk['categoria']=='elementar' else 0
+        dmg=round(dmg*vote_power_multiplier(c,u['id']))
         log.append(f'Você usou {sk["nome"]} e causou {dmg} dano.')
-    else:dmg=random.randint(1,4);log.append(f'Você atacou e causou {dmg} dano.')
+    else:dmg=round(random.randint(1,4)*vote_power_multiplier(c,u['id']));log.append(f'Você atacou e causou {dmg} dano.')
     ehp=max(0,ehp-dmg)
     if ehp<=0:
         reward=entity_xp_reward(hp,e['hp']); c.execute('UPDATE users SET xp=xp+? WHERE id=?',(reward,u['id'])); log.append(f'Maldição derrotada! +{reward} XP.'); status='finished'; turn='player'
@@ -563,27 +690,39 @@ def entity_battle_action(bid):
 def pvp_status():
     u,err=require_user()
     if err:return err
-    c=db(); row=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone(); c.close()
+    c=db(); ensure_pvp_challenges(c)
+    row=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone()
+    pending_received=c.execute("SELECT count(*) AS n FROM pvp_challenges WHERE challenged_id=? AND status='pending'",(u['id'],)).fetchone()
+    pending_sent=c.execute("SELECT count(*) AS n FROM pvp_challenges WHERE challenger_id=? AND status='pending'",(u['id'],)).fetchone()
+    c.close()
     used=int(row['count']) if row else 0
-    return jsonify(usados=min(used,2),restantes=max(0,2-used))
+    return jsonify(usados=min(used,2),restantes=max(0,2-used),
+                   desafios_recebidos=int(pending_received['n'] or 0),
+                   desafios_enviados=int(pending_sent['n'] or 0))
 
-@app.get('/api/battles')
-def list_battles():
+@app.get('/api/pvp-challenges')
+def pvp_challenges():
     u,err=require_user()
     if err:return err
-    c=db();out=[]
-    for b in c.execute("SELECT * FROM battles WHERE status IN ('pending','active') AND (player1=? OR player2=?) ORDER BY id DESC",(u['id'],u['id'])):
-        me1=b['player1']==u['id']; opp=b['player2'] if me1 else b['player1']; row=c.execute('SELECT username FROM users WHERE id=?',(opp,)).fetchone(); on=row['username'] if row else 'Desconhecido'
-        item={'id':b['id'],'oponente':on,'status':b['status'],'sou_desafiado':(b['player2']==u['id']),'meu_hp':b['hp1'] if me1 else b['hp2'],'meu_ce':b['ce1'] if me1 else b['ce2']}
-        if b['status']=='active':item['meu_turno']=b['turn_user']==u['id']
-        out.append(item)
-    c.close();return jsonify(out)
+    c=db(); ensure_pvp_challenges(c); out=[]
+    rows=c.execute("""SELECT pc.*, u1.username AS challenger_name, u2.username AS challenged_name
+                      FROM pvp_challenges pc
+                      JOIN users u1 ON u1.id=pc.challenger_id
+                      JOIN users u2 ON u2.id=pc.challenged_id
+                      WHERE (pc.challenger_id=? OR pc.challenged_id=?) AND pc.status='pending'
+                      ORDER BY pc.id DESC""",(u['id'],u['id'])).fetchall()
+    for r in rows:
+        out.append({'id':r['id'],'tipo':'recebido' if r['challenged_id']==u['id'] else 'enviado',
+                    'desafiante':r['challenger_name'],'desafiado':r['challenged_name'],'criado_em':str(r['created_at'])})
+    c.close(); return jsonify(out)
 
 @app.post('/api/battles')
 def create_battle():
     u,err=require_user()
     if err:return err
-    name=str((request.get_json(silent=True) or {}).get('oponente','')).strip();c=db();opp=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(name,)).fetchone()
+    name=str((request.get_json(silent=True) or {}).get('oponente','')).strip()
+    c=db(); ensure_pvp_challenges(c)
+    opp=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(name,)).fetchone()
     if not opp:c.close();return jsonify(error='Adversário não encontrado.'),404
     if opp['id']==u['id']:c.close();return jsonify(error='Você não pode desafiar a si mesmo.'),400
     day=iso(today())
@@ -591,43 +730,71 @@ def create_battle():
     opp_count=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(opp['id'],day)).fetchone()
     if my_count and int(my_count['count'])>=2:c.close();return jsonify(error='Você já atingiu o limite de 2 combates PvP hoje.'),400
     if opp_count and int(opp_count['count'])>=2:c.close();return jsonify(error='Esse jogador já atingiu o limite de 2 combates PvP hoje.'),400
-    pending=c.execute("SELECT id FROM battles WHERE status='pending' AND ((player1=? AND player2=?) OR (player1=? AND player2=?))",(u['id'],opp['id'],opp['id'],u['id'])).fetchone()
-    if pending:c.close();return jsonify(error='Já existe um desafio pendente entre esses jogadores.'),409
-    s1=battle_stats(c,u['id']);s2=battle_stats(c,opp['id'])
-    bid=insert_and_get_id(c, 'INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?)',(u['id'],opp['id'],u['id'],'pending',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps([f'{u["username"]} desafiou {opp["username"]}. Aguardando resposta.'],ensure_ascii=False)))
-    c.commit();c.close();return jsonify(id=bid,status='pending',mensagem=f'Desafio enviado para {opp["username"]}.')
+    active=c.execute("SELECT id FROM battles WHERE status='active' AND (player1=? OR player2=?)",(u['id'],u['id'])).fetchone()
+    if active:c.close();return jsonify(error='Você já possui um combate PvP ativo.'),400
+    active2=c.execute("SELECT id FROM battles WHERE status='active' AND (player1=? OR player2=?)",(opp['id'],opp['id'])).fetchone()
+    if active2:c.close();return jsonify(error='Esse jogador já está em um combate PvP ativo.'),400
+    pending=c.execute("SELECT id FROM pvp_challenges WHERE challenger_id=? AND challenged_id=? AND status='pending'",(u['id'],opp['id'])).fetchone()
+    if pending:c.close();return jsonify(error='Você já enviou um desafio para esse jogador e está aguardando resposta.'),400
+    reverse=c.execute("SELECT id FROM pvp_challenges WHERE challenger_id=? AND challenged_id=? AND status='pending'",(opp['id'],u['id'])).fetchone()
+    if reverse:c.close();return jsonify(error='Esse jogador já desafiou você. Responda ao desafio recebido.'),400
+    cid=insert_and_get_id(c,'INSERT INTO pvp_challenges(challenger_id,challenged_id,status) VALUES(?,?,?)',(u['id'],opp['id'],'pending'))
+    c.commit();c.close()
+    return jsonify(id=cid,status='pending',mensagem=f'Desafio enviado para {opp["username"]}. Aguardando aceitação.')
 
-@app.post('/api/battles/<int:bid>/accept')
-def accept_battle(bid):
+@app.post('/api/pvp-challenges/<int:cid>/respond')
+def respond_pvp_challenge(cid):
     u,err=require_user()
     if err:return err
-    import random
-    c=db();b=c.execute("SELECT * FROM battles WHERE id=? AND player2=?",(bid,u['id'])).fetchone()
-    if not b:c.close();return jsonify(error='Desafio não encontrado ou você não é o desafiado.'),404
-    if b['status']!='pending':c.close();return jsonify(error='Esse desafio não está mais pendente.'),400
-    starter=random.choice([b['player1'],b['player2']])
-    names=[c.execute('SELECT username FROM users WHERE id=?',(x,)).fetchone()['username'] for x in (b['player1'],b['player2'])]
-    log=json.loads(b['log_json']) if b['log_json'] else []
-    starter_name=names[0] if starter==b['player1'] else names[1]
-    log.append(f'{names[1]} aceitou o desafio. {starter_name} começa (sorteio 50/50).')
-    c.execute("UPDATE battles SET status='active',turn_user=?,log_json=? WHERE id=?",(starter,json.dumps(log,ensure_ascii=False),bid))
+    action=str((request.get_json(silent=True) or {}).get('acao','')).lower()
+    if action not in ('aceitar','recusar'): return jsonify(error='Resposta inválida.'),400
+    c=db(); ensure_pvp_challenges(c)
+    ch=c.execute('SELECT * FROM pvp_challenges WHERE id=? AND challenged_id=?',(cid,u['id'])).fetchone()
+    if not ch:c.close();return jsonify(error='Desafio não encontrado.'),404
+    if ch['status']!='pending':c.close();return jsonify(error='Esse desafio já foi respondido.'),400
+    if action=='recusar':
+        c.execute("UPDATE pvp_challenges SET status='declined' WHERE id=?",(cid,)); c.commit(); c.close()
+        return jsonify(ok=True,status='declined')
     day=iso(today())
-    for uid in (b['player1'],b['player2']):
+    for uid in (ch['challenger_id'],ch['challenged_id']):
+        row=c.execute('SELECT count FROM pvp_daily WHERE user_id=? AND day=?',(uid,day)).fetchone()
+        if row and int(row['count'])>=2:
+            c.execute("UPDATE pvp_challenges SET status='declined' WHERE id=?",(cid,)); c.commit(); c.close()
+            return jsonify(error='Um dos jogadores já atingiu o limite de 2 combates PvP hoje.'),400
+    active1=c.execute("SELECT id FROM battles WHERE status='active' AND (player1=? OR player2=?)",(ch['challenger_id'],ch['challenger_id'])).fetchone()
+    active2=c.execute("SELECT id FROM battles WHERE status='active' AND (player1=? OR player2=?)",(ch['challenged_id'],ch['challenged_id'])).fetchone()
+    if active1 or active2:c.close();return jsonify(error='Um dos jogadores já está em outro combate ativo.'),400
+    challenger=c.execute('SELECT username FROM users WHERE id=?',(ch['challenger_id'],)).fetchone()['username']
+    challenged=c.execute('SELECT username FROM users WHERE id=?',(ch['challenged_id'],)).fetchone()['username']
+    s1=battle_stats(c,ch['challenger_id']); s2=battle_stats(c,ch['challenged_id'])
+    starter=ch['challenger_id'] if __import__('random').randint(0,1)==0 else ch['challenged_id']
+    log=[f'{challenger} desafiou {challenged}.',f'Desafio aceito. Sorteio 50/50: {challenger if starter==ch["challenger_id"] else challenged} começa.']
+    bid=insert_and_get_id(c,'INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?)',
+                          (ch['challenger_id'],ch['challenged_id'],starter,'active',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps(log,ensure_ascii=False)))
+    for uid in (ch['challenger_id'],ch['challenged_id']):
         c.execute('INSERT INTO pvp_daily(user_id,day,count) VALUES(?,?,1) ON CONFLICT(user_id,day) DO UPDATE SET count=pvp_daily.count+1',(uid,day))
-    c.commit();c.close();return jsonify(ok=True,id=bid,status='active',turn_user=starter)
+    c.execute("UPDATE pvp_challenges SET status='accepted',battle_id=? WHERE id=?",(bid,cid))
+    c.commit();c.close()
+    return jsonify(ok=True,status='accepted',battle_id=bid,primeiro=starter)
 
-@app.post('/api/battles/<int:bid>/decline')
-def decline_battle(bid):
+@app.post('/api/pvp-challenges/<int:cid>/cancel')
+def cancel_pvp_challenge(cid):
     u,err=require_user()
     if err:return err
-    c=db();b=c.execute("SELECT * FROM battles WHERE id=? AND player2=?",(bid,u['id'])).fetchone()
-    if not b:c.close();return jsonify(error='Desafio não encontrado ou você não é o desafiado.'),404
-    if b['status']!='pending':c.close();return jsonify(error='Esse desafio não está mais pendente.'),400
-    log=json.loads(b['log_json']) if b['log_json'] else []
-    me=c.execute('SELECT username FROM users WHERE id=?',(u['id'],)).fetchone()['username']
-    log.append(f'{me} recusou o desafio.')
-    c.execute("UPDATE battles SET status='declined',log_json=? WHERE id=?",(json.dumps(log,ensure_ascii=False),bid))
-    c.commit();c.close();return jsonify(ok=True,id=bid,status='declined')
+    c=db(); ensure_pvp_challenges(c)
+    ch=c.execute("SELECT * FROM pvp_challenges WHERE id=? AND challenger_id=? AND status='pending'",(cid,u['id'])).fetchone()
+    if not ch:c.close();return jsonify(error='Desafio enviado não encontrado.'),404
+    c.execute("UPDATE pvp_challenges SET status='cancelled' WHERE id=?",(cid,));c.commit();c.close()
+    return jsonify(ok=True)
+
+@app.get('/api/battles')
+def list_battles():
+    u,err=require_user()
+    if err:return err
+    c=db();out=[]
+    for b in c.execute("SELECT * FROM battles WHERE status='active' AND (player1=? OR player2=?) ORDER BY id DESC",(u['id'],u['id'])):
+        mine=b['hp1'] if b['player1']==u['id'] else b['hp2']; ce=b['ce1'] if b['player1']==u['id'] else b['ce2']; opp=b['player2'] if b['player1']==u['id'] else b['player1']; on=c.execute('SELECT username FROM users WHERE id=?',(opp,)).fetchone()['username'];out.append({'id':b['id'],'oponente':on,'seu_hp':mine,'seu_ce':ce,'meu_turno':b['turn_user']==u['id']})
+    c.close();return jsonify(out)
 
 @app.get('/api/battles/<int:bid>')
 def get_battle(bid):
@@ -642,7 +809,7 @@ def get_battle(bid):
         if d:skills.append(d)
     try:log=json.loads(b['log_json'])
     except:log=[]
-    c.close();return jsonify(id=bid,jogador1=names[0],jogador2=names[1],status=b['status'],sou_desafiado=(b['player2']==u['id']),meu_turno=(b['status']=='active' and b['turn_user']==u['id']),seu_hp=float(myhp),seu_ce=float(myce),inimigo_hp=float(ohp),skills=skills,log=log[-6:])
+    c.close();return jsonify(id=bid,jogador1=names[0],jogador2=names[1],status=b['status'],meu_turno=b['turn_user']==u['id'],seu_hp=float(myhp),seu_ce=float(myce),inimigo_hp=float(ohp),skills=skills,log=log[-6:])
 
 @app.post('/api/battles/<int:bid>/action')
 def battle_action(bid):
@@ -665,9 +832,9 @@ def battle_action(bid):
         elif '2d4' in sk['efeito']:rolls=[random.randint(1,4),random.randint(1,4)]
         elif '1d6' in sk['efeito']:rolls=[random.randint(1,6)]
         elif '1d4' in sk['efeito']:rolls=[random.randint(1,4)]
-        dmg=(sum(rolls) if rolls else 0) + (sk['ct'] if sk['categoria']=='elementar' else 0);ohp=max(0,ohp-dmg);msg=f'{u["username"]} usou {sk["nome"]} e causou {dmg} dano.'
+        dmg=(sum(rolls) if rolls else 0) + (sk['ct'] if sk['categoria']=='elementar' else 0);dmg=round(dmg*vote_power_multiplier(c,u['id']));ohp=max(0,ohp-dmg);msg=f'{u["username"]} usou {sk["nome"]} e causou {dmg} dano.'
     else:
-        dmg=random.randint(1,4);ohp=max(0,ohp-dmg);msg=f'{u["username"]} atacou e causou {dmg} dano.'
+        dmg=round(random.randint(1,4)*vote_power_multiplier(c,u['id']));ohp=max(0,ohp-dmg);msg=f'{u["username"]} atacou e causou {dmg} dano.'
     try:log=json.loads(b['log_json'])
     except:log=[]
     log.append(msg)
