@@ -755,13 +755,19 @@ def toggle_skill(skill_id):
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Técnica não encontrada.'),404
-    c=db();row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
+    c=db()
+    master=str(u['username']).upper()==MASTER_USERNAME.upper()
+    row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
+    # O ADM mestre possui todas as técnicas virtualmente; crie a linha ao equipar.
+    if not row and master:
+        c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0) ON CONFLICT(user_id,skill_id) DO NOTHING',(u['id'],skill_id))
+        row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
     if not row:c.close();return jsonify(error='Desbloqueie essa técnica primeiro.'),400
-    newv=0 if row['equipped'] else 1
+    newv=0 if bool(row['equipped']) else 1
     c.execute('UPDATE user_skills SET equipped=? WHERE user_id=? AND skill_id=?',(newv,u['id'],skill_id))
     total=sum(next(x[3] for x in SKILLS if x[0]==r['skill_id']) for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],)))
     if total>current_ct(c,u['id']):c.rollback();c.close();return jsonify(error='Você não possui CT suficiente para equipar essa combinação.'),400
-    c.commit();equipped=[r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],))];c.close();return jsonify(ok=True,equipadas=equipped)
+    c.commit();equipped=[r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],))];c.close();return jsonify(ok=True,equipadas=equipped,ct_usado=total)
 
 def vote_power_multiplier(c,uid):
     # Cada voto vinculativo ativo aumenta o poder de combate em 10%.
