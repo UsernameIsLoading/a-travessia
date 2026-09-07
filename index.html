@@ -665,6 +665,11 @@ button{cursor:pointer}
       <input id="adminSqlFile" type="file" accept=".sql,text/sql,application/sql" style="margin:10px 0;width:100%;">
       <button class="main-btn purple-btn" type="button" onclick="restaurarBackupSQL()">📥 RESTAURAR SQL</button>
     </div>
+    <div class="skill-card" style="border:1px solid rgba(255,60,60,.35);">
+      <h2>☢️ Resetar banco de dados</h2>
+      <p style="color:var(--vermelho2);"><b>PERIGO:</b> apaga contas, personagens, missões, votos, skills, streaks e combates. O banco continua com a estrutura do sistema e o ADMIN é recriado automaticamente em modo mestre.</p>
+      <button class="main-btn red-btn" type="button" onclick="resetarBancoAdmin()">☢️ RESETAR BANCO</button>
+    </div>
     <div class="skill-card">
       <div class="todos-head"><div><h2>👥 Jogadores</h2><p id="adminResumo">Carregando...</p></div><button class="main-btn blue-btn" type="button" onclick="carregarAdmin()">ATUALIZAR</button></div>
       <div id="adminUsers"></div>
@@ -1547,6 +1552,15 @@ async function restaurarBackupSQL(){
   const fd=new FormData();fd.append('arquivo',input.files[0]);
   try{const r=await api('/api/admin/import-sql',{method:'POST',body:fd});alert(r.mensagem||'Banco restaurado.');await carregarAdmin();}
   catch(e){alert(e.message);}
+}
+async function resetarBancoAdmin(){
+  const confirmacao=prompt('Isso apagará TODO o banco. Digite RESETAR para confirmar:');
+  if(confirmacao!=='RESETAR')return;
+  try{
+    const r=await api('/api/admin/reset-db',{method:'POST'});
+    alert(r.mensagem||'Banco resetado.');
+    await carregarAdmin();
+  }catch(e){alert(e.message||'Não foi possível resetar o banco.');}
 }
 
 function exportarExcel(){

@@ -427,6 +427,7 @@ def user_payload(u):
     bonus={x:0.0 for x in CLASSES}
     for r in c.execute('SELECT class,bonus FROM vote_bonuses WHERE user_id=?',(u['id'],)):bonus[r['class']]=float(r['bonus'])
     prog=progression_for(c,u)
+    growth=prog.get('attribute_growth',{})
     tree_id=(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None)
     c.commit();c.close()
     return {'usuario':u['username'],'xp':int(u['xp'] or 0),'tarefas':tasks,'streaks':s,'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name'],'skill_tree':tree_id,'crescimento':growth},'votoBonus':bonus,'progresso':prog,'skill_tree':tree_payload(tree_id)}
@@ -552,6 +553,34 @@ def admin_import_sql():
     except Exception as e:
         c.rollback();c.close();return jsonify(error='Falha ao importar SQL: '+str(e)),400
     c.close();return jsonify(ok=True,mensagem='Banco restaurado com sucesso. Atualize a página.')
+
+@app.post('/api/admin/reset-db')
+def admin_reset_db():
+    ok,err=require_admin()
+    if err:return err
+    c=db()
+    try:
+        if DATABASE_URL:
+            # Mantém o schema e apaga todos os dados. CASCADE cobre as FKs.
+            tables=['pvp_challenges','completions','streaks','vote_bonuses','user_skills','entity_battles','hunts','battles','tasks','characters','pvp_daily','users']
+            c.execute('TRUNCATE TABLE '+', '.join(tables)+' RESTART IDENTITY CASCADE')
+        else:
+            # SQLite: remover filhos primeiro por causa das FKs.
+            for table in ['pvp_challenges','completions','streaks','vote_bonuses','user_skills','entity_battles','hunts','battles','tasks','characters','pvp_daily','users']:
+                c.execute('DELETE FROM '+table)
+            try:
+                for seq in ['users','tasks','battles','entity_battles','pvp_challenges']:
+                    c.execute('DELETE FROM sqlite_sequence WHERE name=?',(seq,))
+            except Exception:
+                pass
+        uid=ensure_master_player(c)
+        c.commit();c.close()
+        session.clear();session['admin']=True;session['user_id']=uid;session.permanent=True
+        return jsonify(ok=True,mensagem='Banco de dados resetado. O jogador ADMIN foi recriado em modo mestre.')
+    except Exception as e:
+        try:c.rollback();c.close()
+        except Exception:pass
+        return jsonify(error=f'Não foi possível resetar o banco: {e}'),500
 
 @app.delete('/api/account')
 def delete_account():
