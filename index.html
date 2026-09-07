@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criação de Personagem</title>
+<title>Cursed Mission</title>
 <style>
 :root{
   --preto:#050507;
@@ -502,7 +502,7 @@ button{cursor:pointer}
 .profile-note{color:#999;font-size:12px;line-height:1.5;margin-top:14px}
 @media(max-width:600px){.frequency-days{grid-template-columns:repeat(4,1fr)}.profile-grid{grid-template-columns:1fr}}
 
-/* Loja de Skills */
+/* Técnicas Amaldiçoadas */
 
 .skill-tree-box{border:1px solid rgba(120,100,255,.35);border-radius:14px;padding:16px;margin:16px 0;background:rgba(100,80,220,.07)}
 .skill-tree-box h2{margin:0 0 6px}.skill-tree-box select{width:100%;padding:12px;border-radius:10px;background:#111;color:inherit;border:1px solid rgba(255,255,255,.18)}.skill-tree-note{font-size:.9rem;opacity:.8;margin-top:8px}.skill-tree-badge{display:inline-block;padding:5px 9px;border-radius:999px;background:rgba(130,100,255,.16);font-size:.8rem;margin-bottom:8px}
@@ -533,6 +533,9 @@ button{cursor:pointer}
 .dashboard-voto .voto-title{font-weight:900}.dashboard-voto .voto-bonus{font-size:12px;color:#caa5ff;margin-top:5px}.dashboard-progress{display:grid;gap:10px}.progress-row{display:grid;grid-template-columns:65px 1fr 38px;gap:9px;align-items:center;font-size:12px}.progress-bar{height:8px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden}.progress-bar span{display:block;height:100%;width:0;border-radius:99px;background:currentColor}.progress-row.corpo{color:var(--vermelho2)}.progress-row.mente{color:var(--azul2)}.progress-row.alma{color:var(--roxo2)}
 @media(max-width:800px){.dashboard-grid{grid-template-columns:1fr}.dashboard-stats{grid-template-columns:repeat(2,1fr)}.dashboard-form{grid-template-columns:1fr 1fr}.dashboard-form input{grid-column:1/-1}.dashboard-form .frequency-box{grid-column:1/-1}}
 @media(max-width:520px){.dashboard-stats{grid-template-columns:1fr 1fr}.dashboard-actions{grid-template-columns:1fr}.dashboard-form{grid-template-columns:1fr}.dashboard-form input,.dashboard-form .frequency-box{grid-column:auto}}
+
+.tree-identity{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center;margin-top:16px;padding:14px;border:1px solid rgba(168,60,255,.35);border-radius:18px;background:rgba(168,60,255,.07);text-align:left}.tree-identity img{width:110px;height:140px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:#111}.tree-identity .tree-quote{font-size:18px;font-weight:800;line-height:1.35;margin:8px 0}.tree-identity .tree-person{opacity:.7;font-size:12px;text-transform:uppercase;letter-spacing:.12em}.tree-identity .tree-domain{font-size:12px;color:var(--roxo2)}.tree-banner{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center}.tree-banner img{width:120px;height:160px;object-fit:cover;border-radius:16px;background:#111}.grade-path{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.grade-node{padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.15);font-size:12px}.grade-node.active{border-color:var(--roxo);box-shadow:0 0 15px rgba(168,60,255,.22)}
+@media(max-width:650px){.tree-identity,.tree-banner{grid-template-columns:1fr}.tree-identity img,.tree-banner img{width:100%;height:210px}}
 </style>
 
 <style>
@@ -599,7 +602,7 @@ button{cursor:pointer}
 
 <div id="paginaLogin" class="page">
   <div class="topbar">
-    <h1 class="logo">A TRAVESSIA</h1>
+    <h1 class="logo">CURSED MISSION</h1>
     <p class="subtitle">Corpo • Mente • Alma</p>
   </div>
 
@@ -657,7 +660,7 @@ button{cursor:pointer}
     </div>
     <div class="skill-card">
       <h2>📤 Restaurar banco</h2>
-      <p style="color:var(--vermelho2);"><b>ATENÇÃO:</b> a restauração substitui os dados atuais do banco. Use apenas um backup confiável do A Travessia.</p>
+      <p style="color:var(--vermelho2);"><b>ATENÇÃO:</b> a restauração substitui os dados atuais do banco. Use apenas um backup confiável do Cursed Mission.</p>
       <input id="adminSqlFile" type="file" accept=".sql,text/sql,application/sql" style="margin:10px 0;width:100%;">
       <button class="main-btn purple-btn" type="button" onclick="restaurarBackupSQL()">📥 RESTAURAR SQL</button>
     </div>
@@ -674,7 +677,7 @@ button{cursor:pointer}
 
 <div id="paginaDashboard" class="page hidden">
   <div class="topbar">
-    <h1 class="logo">A TRAVESSIA</h1>
+    <h1 class="logo">CURSED MISSION</h1>
     <p class="subtitle">Sua jornada • Corpo • Mente • Alma</p>
   </div>
   <main class="dashboard-shell">
@@ -724,7 +727,7 @@ button{cursor:pointer}
 
 <div id="pagina1" class="page">
   <div class="topbar">
-    <h1 class="logo">A TRAVESSIA</h1>
+    <h1 class="logo">CURSED MISSION</h1>
     <p class="subtitle">Corpo • Mente • Alma</p>
   </div>
 
@@ -785,6 +788,7 @@ button{cursor:pointer}
         <option value="">— Selecione sua árvore —</option>
       </select>
       <div id="skillTreeDesc" class="skill-tree-note">A escolha não poderá ser trocada depois.</div>
+      <div id="skillTreeIdentity" class="tree-identity hidden"></div>
     </div>
 
     <div class="rules">
@@ -840,18 +844,19 @@ button{cursor:pointer}
     <p class="subtitle">Seu personagem • Seus status</p>
   </div>
   <section class="panel">
-    <div class="todos-head"><div><h1 id="perfilUsuario">—</h1><p>Os status usam seus atributos e os dias de tarefas cumpridas.</p></div></div>
+    <div class="todos-head"><div><h1 id="perfilUsuario">—</h1><p>Seu Grau é construído pela consistência. Corpo, Mente e Alma continuam definindo sua especialização.</p></div></div>
     <div class="profile-grid">
       <div class="profile-stat"><h3 class="red-text">HP</h3><div class="big" id="perfilHP">—</div></div>
       <div class="profile-stat"><h3 class="purple-text">CE</h3><div class="big" id="perfilCE">—</div></div>
       <div class="profile-stat"><h3 class="blue-text">CT</h3><div class="big" id="perfilCT">—</div></div>
     </div>
+    <div id="perfilProgressao" class="skill-card" style="margin-top:14px"></div>
     <table class="status-table"><thead><tr><th>Atributo</th><th>Base</th><th>Voto</th><th>Efetivo</th><th>Dias</th></tr></thead><tbody>
       <tr><td class="red-text">Corpo</td><td id="perfilBody">0</td><td id="perfilVotoBody">+0</td><td id="perfilEfBody">0</td><td id="perfilDiasBody">0</td></tr>
       <tr><td class="blue-text">Mente</td><td id="perfilMind">0</td><td id="perfilVotoMind">+0</td><td id="perfilEfMind">0</td><td id="perfilDiasMind">0</td></tr>
       <tr><td class="purple-text">Alma</td><td id="perfilSoul">0</td><td id="perfilVotoSoul">+0</td><td id="perfilEfSoul">0</td><td id="perfilDiasSoul">0</td></tr>
     </tbody></table>
-    <p class="profile-note">F(atributo, dias) = 30 / ((1 + atributo²/10) × dias + 30). A criação de um Voto Vinculativo aplica imediatamente +0,5 no atributo correspondente. Os to-dos precisam ser marcados novamente a cada dia.</p>
+    <p class="profile-note">Os status agora seguem o Grau do feiticeiro: Grade 4 → 70 HP / 250 CE / 3 CT; Grade 3 → 90 / 400 / 4; Grade 2 → 115 / 550 / 6; Grade 1 → 150 / 750 / 8; Special Grade → 200 / 1000 / 10. Votos Vinculativos aumentam seu poder, mas quebrar um voto zera o ciclo de progresso.</p>
     <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA TAREFAS</button><button class="main-btn purple-btn" onclick="abrirPerfil()">ATUALIZAR</button><button class="main-btn red-btn" onclick="deletarConta()">🗑️ DELETAR CONTA</button></div>
   </section>
 </div>
@@ -959,16 +964,16 @@ button{cursor:pointer}
     <div class="footer-actions">
       <button class="main-btn blue-btn" onclick="voltarPagina2()">← VOLTAR</button>
       <button class="main-btn purple-btn" onclick="abrirLeaderboard()">🏆 LEADERBOARD</button>
-      <button class="main-btn blue-btn" onclick="abrirPerfil()">👤 PERFIL</button><button class="main-btn purple-btn" onclick="abrirSkills()">🛒 SKILL SHOP</button><button class="main-btn red-btn" onclick="abrirCombate()">⚔ COMBATE</button>
+      <button class="main-btn blue-btn" onclick="abrirPerfil()">👤 PERFIL</button><button class="main-btn purple-btn" onclick="abrirSkills()">🛒 TÉCNICAS</button><button class="main-btn red-btn" onclick="abrirCombate()">⚔ COMBATE</button>
     </div>
   </section>
 </div>
 
 
 <div id="paginaSkills" class="page hidden">
-  <div class="topbar"><h1 class="logo">SKILL SHOP</h1><p class="subtitle">Escolha suas técnicas • CT define quantas você consegue equipar</p></div>
+  <div class="topbar"><h1 class="logo">TÉCNICAS</h1><p class="subtitle">Escolha suas técnicas • CT define quantas você consegue equipar</p></div>
   <section class="panel">
-    <div class="todos-head"><div><h1>Loja de Skills</h1><p id="skillResumo">Carregando...</p><p style="color:#999;font-size:12px;margin:6px 0 0;">Dano = base + dado • CE = custo de Energia Amaldiçoada • CT = espaço de técnica</p></div><button class="main-btn purple-btn" onclick="abrirSkills()">ATUALIZAR</button></div>
+    <div class="todos-head"><div><h1>Técnicas Amaldiçoadas</h1><p id="skillResumo">Carregando...</p><p style="color:#999;font-size:12px;margin:6px 0 0;">Dano = base + dado • CE = custo de Energia Amaldiçoada • CT = espaço de técnica</p></div><button class="main-btn purple-btn" onclick="abrirSkills()">ATUALIZAR</button></div>
     <div id="skillProgression" class="skill-shop"></div><div id="skillShop" class="skill-shop"></div>
     <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA MISSÕES</button></div>
   </section>
@@ -997,16 +1002,20 @@ let streaks={
 const TOTAL_PONTOS=3;
 const MAX_ATRIBUTO=3;
 
-const SKILL_TREE_OPTIONS={
-  shrine:['Shrine','Cortes, teia e fogo.'],limitless:['Limitless','Infinity, Blue, Red e Hollow Purple.'],'ten-shadows':['Ten Shadows Technique','Shikigami e Chimera Shadow Garden.'],'cursed-spirit-manipulation':['Cursed Spirit Manipulation','Controle de espíritos e Uzumaki.'],'idle-transfiguration':['Idle Transfiguration','Manipulação da alma.'],'straw-doll':['Straw Doll Technique','Pregos, Hairpin e Resonance.'],ratio:['Ratio Technique','Pontos fracos e Collapse.'],projection:['Projection Sorcery','Movimento em 24 quadros.'],blood:['Blood Manipulation','Sangue ofensivo e reforço.'],'boogie-woogie':['Boogie Woogie','Troca de posições.'],'cursed-speech':['Cursed Speech','Ordens amaldiçoadas.'],copy:['Copy','Cópia de técnicas.'],construction:['Construction','Criação de matéria.'],'star-rage':['Star Rage','Massa virtual.'],sky:['Sky Manipulation','Manipulação do céu.'],'granite-blast':['Granite Blast','Descargas concentradas.'],comedian:['Comedian','Efeito baseado no humor.'],'technique-extinguishment':['Technique Extinguishment','Anulação de técnicas.'],inverse:['Inverse','Inversão da força.'],seance:['Séance Technique','Manifestação de características.'],puppet:['Puppet Manipulation','Marionetes.'],'auspicious-beasts':['Auspicious Beasts Summon','Bestas Auspiciosas.'],rot:['Rot Technique','Decomposição.'],cloning:['Cloning Technique','Cópias.'],miracles:['Miracles','Milagres acumulados.'],ice:['Ice Formation','Formação de gelo.'],'disaster-flames':['Disaster Flames','Fogo e meteorito.'],'disaster-plants':['Disaster Plants','Vegetação amaldiçoada.'],'disaster-tides':['Disaster Tides','Água e criaturas aquáticas.'],'contractual-recreation':['Contractual Re-Creation','Reconstrução de objetos.'],'love-rendezvous':['Love Rendezvous','Controle de aproximação.'],'solo-forbidden-area':['Solo Forbidden Area','Fortalecimento sob condições.'],'black-bird':['Black Bird Manipulation','Controle de corvos.'],'mythical-beast-amber':['Mythical Beast Amber','Técnica máxima elétrica.'],'prayer-song':['Prayer Song','Fortalecimento por cântico.'],antigravity:['Antigravity System','Gravidade e reversão.'],light:['Light','Luz e escuridão.'],smallpox:['Smallpox Deity Domain','Domínio da Divindade da Varíola.'],'deadly-sentencing':['Deadly Sentencing Domain','Julgamento e Confisco.'],'idle-death-gamble':['Idle Death Gamble Domain','Jogo de azar e Jackpot.'],'womb-profusion':['Womb Profusion Domain','Expansão de domínio.'],'threefold-affliction':['Threefold Affliction Domain','Expansão de domínio.'],'authentic-mutual-love':['Authentic Mutual Love Domain','Expansão de domínio.'],'hanami-domain':['Hanami Domain','Expansão de domínio.'],'dabura-domain':['Dabura Domain','Expansão de domínio.'],'yuji-domain':['Yuji Domain','Expansão de domínio.']};
+const SKILL_TREE_OPTIONS={"shrine":["Shrine","Técnica amaldiçoada associada a Ryomen Sukuna."],"limitless":["Limitless","Técnica amaldiçoada associada a Satoru Gojo."],"ten-shadows":["Ten Shadows Technique","Técnica amaldiçoada associada a Megumi Fushiguro."],"cursed-spirit-manipulation":["Cursed Spirit Manipulation","Técnica amaldiçoada associada a Suguru Geto."],"idle-transfiguration":["Idle Transfiguration","Técnica amaldiçoada associada a Mahito."],"straw-doll":["Straw Doll Technique","Técnica amaldiçoada associada a Nobara Kugisaki."],"ratio":["Ratio Technique","Técnica amaldiçoada associada a Kento Nanami."],"projection":["Projection Sorcery","Técnica amaldiçoada associada a Naobito Zenin."],"blood":["Blood Manipulation","Técnica amaldiçoada associada a Choso."],"boogie-woogie":["Boogie Woogie","Técnica amaldiçoada associada a Aoi Todo."],"cursed-speech":["Cursed Speech","Técnica amaldiçoada associada a Toge Inumaki."],"copy":["Copy","Técnica amaldiçoada associada a Yuta Okkotsu."],"construction":["Construction","Técnica amaldiçoada associada a Yorozu."],"star-rage":["Star Rage","Técnica amaldiçoada associada a Yuki Tsukumo."],"sky":["Sky Manipulation","Técnica amaldiçoada associada a Takako Uro."],"granite-blast":["Granite Blast","Técnica amaldiçoada associada a Ryu Ishigori."],"comedian":["Comedian","Técnica amaldiçoada associada a Fumihiko Takaba."],"technique-extinguishment":["Technique Extinguishment","Técnica amaldiçoada associada a Hana Kurusu / Angel."],"inverse":["Inverse","Técnica amaldiçoada associada a Jiro Awasaka."],"seance":["Séance Technique","Técnica amaldiçoada associada a Ogami."],"puppet":["Puppet Manipulation","Técnica amaldiçoada associada a Kokichi Muta."],"auspicious-beasts":["Auspicious Beasts Summon","Técnica amaldiçoada associada a Takuma Ino."],"rot":["Rot Technique","Técnica amaldiçoada associada a Eso."],"cloning":["Cloning Technique","Técnica amaldiçoada associada a Bata-bata."],"miracles":["Miracles","Técnica amaldiçoada associada a Haruta Shigemo."],"ice":["Ice Formation","Técnica amaldiçoada associada a Uraume."],"disaster-flames":["Disaster Flames","Técnica amaldiçoada associada a Jogo."],"disaster-plants":["Disaster Plants","Técnica amaldiçoada associada a Hanami."],"disaster-tides":["Disaster Tides","Técnica amaldiçoada associada a Dagon."],"contractual-recreation":["Contractual Re-Creation","Técnica amaldiçoada associada a Reggie Star."],"love-rendezvous":["Love Rendezvous","Técnica amaldiçoada associada a Kirara Hoshi."],"solo-forbidden-area":["Solo Forbidden Area","Técnica amaldiçoada associada a Utahime Iori."],"black-bird":["Black Bird Manipulation","Técnica amaldiçoada associada a Mei Mei."],"mythical-beast-amber":["Mythical Beast Amber","Técnica amaldiçoada associada a Hajime Kashimo."],"prayer-song":["Prayer Song","Técnica amaldiçoada associada a Yasohachi Bridge User."],"antigravity":["Antigravity System","Técnica amaldiçoada associada a Kenjaku."],"light":["Light","Técnica amaldiçoada associada a Miguel."],"smallpox":["Smallpox Deity Domain","Técnica amaldiçoada associada a Smallpox Deity."],"deadly-sentencing":["Deadly Sentencing Domain","Técnica amaldiçoada associada a Hiromi Higuruma."],"idle-death-gamble":["Idle Death Gamble Domain","Técnica amaldiçoada associada a Kinji Hakari."],"womb-profusion":["Womb Profusion Domain","Técnica amaldiçoada associada a Kenjaku."],"threefold-affliction":["Threefold Affliction Domain","Técnica amaldiçoada associada a Yorozu."],"authentic-mutual-love":["Authentic Mutual Love Domain","Técnica amaldiçoada associada a Yuta Okkotsu."],"hanami-domain":["Hanami Domain","Técnica amaldiçoada associada a Hanami."],"dabura-domain":["Dabura Domain","Técnica amaldiçoada associada a Dabura."],"yuji-domain":["Yuji Domain","Técnica amaldiçoada associada a Yuji Itadori."]};
+const TREE_PRESENTATION={"shrine":{"personagem":"Ryomen Sukuna","frase":"Tenha orgulho, você é forte.","imagem":"https://static.zerochan.net/Sukuna.full.3814718.jpg","dominio":"Malevolent Shrine"},"limitless":{"personagem":"Satoru Gojo","frase":"No céu e na terra, apenas eu sou o honrado.","imagem":"https://static.zerochan.net/Gojou.Satoru.full.3974287.jpg","dominio":"Unlimited Void"},"ten-shadows":{"personagem":"Megumi Fushiguro","frase":"Com minha própria vida, salvarei as pessoas de forma desigual.","imagem":"https://static.zerochan.net/Megumi.Fushiguro.full.3233980.jpg","dominio":"Chimera Shadow Garden"},"cursed-spirit-manipulation":{"personagem":"Suguru Geto","frase":"Você é o mais forte porque é Satoru Gojo?","imagem":"https://static.zerochan.net/Suguru.Getou.full.3587532.jpg","dominio":"Womb Profusion"},"idle-transfiguration":{"personagem":"Mahito","frase":"A vida não tem peso ou valor particular.","imagem":"https://static.zerochan.net/Mahito.full.3679477.jpg","dominio":"Self-Embodiment of Perfection"},"straw-doll":{"personagem":"Nobara Kugisaki","frase":"Eu sou Nobara Kugisaki.","imagem":"https://static.zerochan.net/Kugisaki.Nobara.full.3522408.jpg","dominio":"—"},"ratio":{"personagem":"Kento Nanami","frase":"Trabalho é uma merda.","imagem":"https://static.zerochan.net/Nanami.Kento.full.3574668.jpg","dominio":"—"},"projection":{"personagem":"Naobito Zenin","frase":"Eu sou o feiticeiro mais rápido da família Zenin.","imagem":"https://static.zerochan.net/Naobito.Zenin.full.3518074.jpg","dominio":"—"},"blood":{"personagem":"Choso","frase":"Eu sou seu irmão mais velho.","imagem":"https://static.zerochan.net/Choso.full.3769572.jpg","dominio":"—"},"boogie-woogie":{"personagem":"Aoi Todo","frase":"O ato do aplauso é uma aclamação da alma!","imagem":"https://static.zerochan.net/Toudou.Aoi.full.3595620.jpg","dominio":"—"},"cursed-speech":{"personagem":"Toge Inumaki","frase":"Salmão.","imagem":"https://static.zerochan.net/Inumaki.Toge.full.3572672.jpg","dominio":"—"},"copy":{"personagem":"Yuta Okkotsu","frase":"Rika.","imagem":"https://static.zerochan.net/Okkotsu.Yuuta.full.3814945.jpg","dominio":"Authentic Mutual Love"},"construction":{"personagem":"Yorozu","frase":"Eu vou me casar com você.","imagem":"https://static.zerochan.net/Yorozu.full.3884581.jpg","dominio":"Threefold Affliction"},"star-rage":{"personagem":"Yuki Tsukumo","frase":"Que tipo de garota você gosta?","imagem":"https://static.zerochan.net/Tsukumo.Yuki.full.3741404.jpg","dominio":"—"},"sky":{"personagem":"Takako Uro","frase":"Eu odeio a luz do sol.","imagem":"https://static.zerochan.net/Uro.Takako.full.3895237.jpg","dominio":"—"},"granite-blast":{"personagem":"Ryu Ishigori","frase":"A vida não tem sabor.","imagem":"https://static.zerochan.net/Ishigori.Ryu.full.3794875.jpg","dominio":"—"},"comedian":{"personagem":"Fumihiko Takaba","frase":"Se eu não achar engraçado, não tem graça.","imagem":"https://static.zerochan.net/Takaba.Fumihiko.full.3879420.jpg","dominio":"—"},"technique-extinguishment":{"personagem":"Hana Kurusu / Angel","frase":"Devolva Megumi para mim!","imagem":"https://static.zerochan.net/Kurusu.Hana.full.3825632.jpg","dominio":"Jacob’s Ladder"},"inverse":{"personagem":"Jiro Awasaka","frase":"Eu sou um homem que sobrevive.","imagem":"https://static.zerochan.net/Awasaka.Jiro.full.3471446.jpg","dominio":"—"},"seance":{"personagem":"Ogami","frase":"Eu trouxe de volta um feiticeiro.","imagem":"https://static.zerochan.net/Ogami.full.3491297.jpg","dominio":"—"},"puppet":{"personagem":"Kokichi Muta","frase":"Encontre sua felicidade.","imagem":"https://static.zerochan.net/Muta.Kokichi.full.3478074.jpg","dominio":"—"},"auspicious-beasts":{"personagem":"Takuma Ino","frase":"Eu vou dar o meu melhor.","imagem":"https://static.zerochan.net/Ino.Takuma.full.3577997.jpg","dominio":"—"},"rot":{"personagem":"Eso","frase":"Nós somos irmãos.","imagem":"https://static.zerochan.net/Eso.full.3486672.jpg","dominio":"—"},"cloning":{"personagem":"Bata-bata","frase":"Uma técnica pode ser usada de muitas formas.","imagem":"https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg","dominio":"—"},"miracles":{"personagem":"Haruta Shigemo","frase":"Eu sempre tive sorte.","imagem":"https://static.zerochan.net/Shigemo.Haruta.full.3513412.jpg","dominio":"—"},"ice":{"personagem":"Uraume","frase":"Sukuna-sama.","imagem":"https://static.zerochan.net/Uraume.full.3801224.jpg","dominio":"—"},"disaster-flames":{"personagem":"Jogo","frase":"Eu sou um espírito amaldiçoado.","imagem":"https://static.zerochan.net/Jougo.full.3552467.jpg","dominio":"Coffin of the Iron Mountain"},"disaster-plants":{"personagem":"Hanami","frase":"Os humanos precisam desaparecer.","imagem":"https://static.zerochan.net/Hanami.full.3485955.jpg","dominio":"—"},"disaster-tides":{"personagem":"Dagon","frase":"Eu nasci do medo do mar.","imagem":"https://static.zerochan.net/Dagon.full.3550937.jpg","dominio":"Horizon of the Captivating Skandha"},"contractual-recreation":{"personagem":"Reggie Star","frase":"Eu não sou um homem de promessas vazias.","imagem":"https://static.zerochan.net/Reggie.Star.full.3825626.jpg","dominio":"—"},"love-rendezvous":{"personagem":"Kirara Hoshi","frase":"Eu não quero perder meu tempo.","imagem":"https://static.zerochan.net/Hoshi.Kirara.full.3840985.jpg","dominio":"—"},"solo-forbidden-area":{"personagem":"Utahime Iori","frase":"Não subestime os feiticeiros de Kyoto.","imagem":"https://static.zerochan.net/Iori.Utahime.full.3577957.jpg","dominio":"—"},"black-bird":{"personagem":"Mei Mei","frase":"Dinheiro é tudo que importa.","imagem":"https://static.zerochan.net/Mei.Mei.full.3577958.jpg","dominio":"—"},"mythical-beast-amber":{"personagem":"Hajime Kashimo","frase":"Eu estava esperando por você.","imagem":"https://static.zerochan.net/Kashimo.Hajime.full.3852290.jpg","dominio":"—"},"prayer-song":{"personagem":"Yasohachi Bridge User","frase":"Oração é a força de uma vontade.","imagem":"https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg","dominio":"—"},"antigravity":{"personagem":"Kenjaku","frase":"A evolução humana é fascinante.","imagem":"https://static.zerochan.net/Kenjaku.full.3791075.jpg","dominio":"Womb Profusion"},"light":{"personagem":"Miguel","frase":"Eu não tenho tempo para isso.","imagem":"https://static.zerochan.net/Miguel.full.3902188.jpg","dominio":"—"},"smallpox":{"personagem":"Smallpox Deity","frase":"—","imagem":"https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg","dominio":"Smallpox Deity Domain"},"deadly-sentencing":{"personagem":"Hiromi Higuruma","frase":"Confie no julgamento.","imagem":"https://static.zerochan.net/Higuruma.Hiromi.full.3847165.jpg","dominio":"Deadly Sentencing"},"idle-death-gamble":{"personagem":"Kinji Hakari","frase":"Jackpot!","imagem":"https://static.zerochan.net/Hakari.Kinji.full.3823831.jpg","dominio":"Idle Death Gamble"},"womb-profusion":{"personagem":"Kenjaku","frase":"A evolução humana é fascinante.","imagem":"https://static.zerochan.net/Kenjaku.full.3791075.jpg","dominio":"Womb Profusion"},"threefold-affliction":{"personagem":"Yorozu","frase":"Eu vou me casar com você.","imagem":"https://static.zerochan.net/Yorozu.full.3884581.jpg","dominio":"Threefold Affliction"},"authentic-mutual-love":{"personagem":"Yuta Okkotsu","frase":"Rika.","imagem":"https://static.zerochan.net/Okkotsu.Yuuta.full.3814945.jpg","dominio":"Authentic Mutual Love"},"hanami-domain":{"personagem":"Hanami","frase":"Os humanos precisam desaparecer.","imagem":"https://static.zerochan.net/Hanami.full.3485955.jpg","dominio":"Domain Expansion"},"dabura-domain":{"personagem":"Dabura","frase":"Eu sou o rei do submundo.","imagem":"https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg","dominio":"Domain Expansion"},"yuji-domain":{"personagem":"Yuji Itadori","frase":"Eu sou só um feiticeiro.","imagem":"https://static.zerochan.net/Itadori.Yuuji.full.3974286.jpg","dominio":"Domain Expansion"}};
 
 function preencherSkillTrees(){
   const sel=document.getElementById('skillTree'); if(!sel || sel.options.length>1)return;
   Object.entries(SKILL_TREE_OPTIONS).forEach(([id,v])=>{const o=document.createElement('option');o.value=id;o.textContent=v[0];sel.appendChild(o);});
 }
 function atualizarDescricaoSkillTree(){
-  const sel=document.getElementById('skillTree'),desc=document.getElementById('skillTreeDesc'); if(!sel||!desc)return;
-  const v=SKILL_TREE_OPTIONS[sel.value]; desc.textContent=v?`${v[1]} A escolha não poderá ser trocada depois.`:'A escolha não poderá ser trocada depois.';
+  const sel=document.getElementById('skillTree'),desc=document.getElementById('skillTreeDesc'),box=document.getElementById('skillTreeIdentity'); if(!sel||!desc)return;
+  const v=SKILL_TREE_OPTIONS[sel.value],m=TREE_PRESENTATION[sel.value];
+  desc.textContent=v?`${v[1]} A escolha não poderá ser trocada depois.`:'A escolha não poderá ser trocada depois.';
+  if(!box)return;
+  box.classList.toggle('hidden',!m);
+  box.innerHTML=m?`<img src="${m.imagem}" alt="${escaparXml(m.personagem)}" onerror="this.style.display='none'"><div><div class="tree-person">${escaparXml(m.personagem)}</div><div class="tree-quote">“${escaparXml(m.frase)}”</div><div class="tree-domain">◆ Ápice: ${escaparXml(m.dominio)}</div></div>`:'';
 }
 
 function alterarAtributo(atributo,valor){
@@ -1414,6 +1423,8 @@ async function abrirPerfil(){
     document.getElementById('perfilHP').textContent=fmt(p.stats.HP);
     document.getElementById('perfilCE').textContent=fmt(p.stats.CE);
     document.getElementById('perfilCT').textContent=fmt(p.stats.CT);
+    const pr=p.progresso||{}; const path=['Grade 4','Grade 3','Grade 2','Grade 1','Special Grade'].map(g=>`<span class="grade-node ${pr.grade===g?'active':''}">${g}</span>`).join('');
+    document.getElementById('perfilProgressao').innerHTML=`<h3>📈 Progressão</h3><p><b>${escaparXml(pr.grade||'Grade 4')}</b> • Consistência <b>${Number(pr.score||0).toFixed(0)}%</b> • ${Number(pr.dias||0)} dias.</p><div class="grade-path">${path}</div>${pr.broken_vote?'<p style="color:var(--vermelho2)"><b>⚠ VOTO QUEBRADO:</b> seu ciclo de progresso foi zerado.</p>':'<p>Próximo: <b>'+escaparXml(pr.next||'Special Grade')+'</b>. Votos vinculativos aceleram o poder, mas quebrar um voto zera o ciclo.</p>'}`;
   }catch(e){alert(e.message);}
 }
 
@@ -1448,7 +1459,9 @@ async function abrirSkills(){
   try{
     const data=await api('/api/skills');
     const cats={ofensiva:'⚔️ OFENSIVAS',espacial:'🌀 ESPACIAIS',defensiva:'🛡️ DEFENSIVAS',controle:'⛓️ CONTROLE',alma:'👁️ ALMA',invocacao:'🐺 INVOCAÇÕES',reforco:'✨ REFORÇOS',versatil:'🔄 VERSÁTEIS',especial:'🧿 ESPECIAIS',anulacao:'🚫 ANULAÇÃO',maxima:'💥 TÉCNICAS MÁXIMAS',reversa:'🔁 TÉCNICAS REVERSAS'};
-    const treeBanner=data.skill_tree?`<div class="skill-card"><h2>🌳 ${escaparXml(data.skill_tree_nome)}</h2><p>${escaparXml(data.skill_tree_descricao||'')} </p><p><b>Regra:</b> este personagem só pode desbloquear técnicas desta árvore.</p></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a loja.</p></div>`;
+    const m=data.tree_meta;
+    const path=`<div class="grade-path">${['Grade 4','Grade 3','Grade 2','Grade 1','Special Grade'].map(g=>`<span class="grade-node ${data.progresso&&data.progresso.grade===g?'active':''}">${g}</span>`).join('')}</div>`;
+    const treeBanner=data.skill_tree?`<div class="skill-card tree-banner"><img src="${m?.imagem||''}" alt="${escaparXml(m?.personagem||data.skill_tree_nome||'')}" onerror="this.style.display='none'"><div><div class="skill-tree-badge">🌳 ${escaparXml(data.skill_tree_nome)}</div><h2>${escaparXml(m?.personagem||'')}</h2><p class="tree-quote">“${escaparXml(m?.frase||'')}”</p><p><b>Regra:</b> uma única árvore por personagem. O domínio é progressão, não compra.</p>${path}</div></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a progressão.</p></div>`;
     const grupos=Object.entries(cats).map(([cat,title])=>{
       const items=data.skills.filter(x=>x.categoria===cat && x.tipo!=='domain' && !x.adquirida && x.mesma_arvore);
       if(!items.length)return '';
@@ -1487,7 +1500,7 @@ async function cacarMaldicao(){
 function renderCaca(items){
   const box=document.getElementById('cacaBox');
   if(!items.length){box.innerHTML='<div class="skill-card"><p>Nenhuma maldição apareceu hoje.</p></div>';return;}
-  box.innerHTML='<div class="skill-grid">'+items.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p>HP: <b>${e.hp}</b> • Dano: <b>${e.damage}</b> • CT: <b>${e.ct}</b></p><p>${e.skills&&e.skills.length?'Skills: '+e.skills.map(x=>escaparXml(x.nome)).join(', '):'Sem habilidades especiais.'}${e.multiplayer?' • ⚔ MULTIPLAYER':''}</p><button class="main-btn red-btn" onclick="enfrentarMaldicao(${i})">ENFRENTAR</button></div>`).join('')+'</div>';
+  box.innerHTML='<div class="skill-grid">'+items.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p>HP: <b>${e.hp}</b> • CE: <b>${e.ce||0}</b> • CT: <b>${e.ct}</b></p><p>${e.skills&&e.skills.length?'Skills: '+e.skills.map(x=>escaparXml(x.nome)).join(', '):'Sem habilidades especiais.'}${e.multiplayer?' • ⚔ MULTIPLAYER':''}</p><button class="main-btn red-btn" onclick="enfrentarMaldicao(${i})">ENFRENTAR</button></div>`).join('')+'</div>';
   window.maldicoesHoje=items;
 }
 async function enfrentarMaldicao(i){
