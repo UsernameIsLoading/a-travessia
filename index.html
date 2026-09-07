@@ -1536,7 +1536,7 @@ async function carregarCaca(){
       box.innerHTML='<div class="skill-card"><p>Não há maldições disponíveis para enfrentar hoje. Volte amanhã para uma nova caça.</p></div>';
       return;
     }
-    box.innerHTML=entidades.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p><b>HP:</b> ${Number(e.hp).toFixed(0)} • <b>CE:</b> ${Number(e.ce).toFixed(0)} • <b>CT:</b> ${Number(e.ct).toFixed(0)}</p><p><b>Dano:</b> ${Number(e.damage).toFixed(0)} • <b>Técnicas:</b> ${(e.skills||[]).length}</p><div>${(e.skills||[]).map(s=>`<span class="skill-meta" style="display:inline-block;margin:3px">${escaparXml(s.nome)}</span>`).join('')}</div><button class="main-btn red-btn" onclick='iniciarLutaMaldicao(${JSON.stringify(e).replace(/</g,'\u003c')})'>⚔ LUTAR</button></div>`).join('');
+    box.innerHTML=entidades.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p><b>HP:</b> ${Number(e.hp).toFixed(0)} • <b>CE:</b> ${Number(e.ce).toFixed(0)} • <b>CT:</b> ${Number(e.ct).toFixed(0)}</p><p><b>Ataque básico:</b> ${escaparXml(e.damage_expr||'1d4')} • <b>Técnicas:</b> ${(e.skills||[]).length}</p><div>${(e.skills||[]).map(s=>`<span class="skill-meta" style="display:inline-block;margin:3px">${escaparXml(s.nome)}</span>`).join('')}</div><button class="main-btn red-btn" onclick='iniciarLutaMaldicao(${JSON.stringify(e).replace(/</g,'\u003c')})'>⚔ LUTAR</button></div>`).join('');
   }catch(e){box.innerHTML=`<div class="skill-card"><p>${escaparXml(e.message)}</p></div>`;}
 }
 
@@ -1567,7 +1567,7 @@ async function abrirBatalhaMaldicao(id){
     }else{
       actions='<p><b>'+(b.status==='active'?'Turno da maldição. Aguarde...':'Combate encerrado.')+'</b></p>';
     }
-    box.innerHTML='<div class="skill-card"><h2>☠️ '+escaparXml(b.entity.grade)+' — COMBATE</h2><p><b>Você:</b> HP '+Number(b.seu_hp).toFixed(1)+' • CE '+Number(b.seu_ce).toFixed(1)+' | <b>Maldição:</b> HP '+Number(b.inimigo_hp).toFixed(1)+'</p><div class="skill-card" style="margin:10px 0"><b>Registro</b><p>'+(log||'O combate começou.')+'</p></div>'+actions+'<button class="main-btn blue-btn" onclick="carregarCaca()">← VOLTAR PARA CAÇA</button></div>';
+    box.innerHTML='<div class="skill-card"><h2>☠️ '+escaparXml(b.entity.grade)+' — COMBATE</h2><p><b>Você:</b> HP '+Number(b.seu_hp).toFixed(1)+' • CE '+Number(b.seu_ce).toFixed(1)+' | <b>Maldição:</b> HP '+Number(b.inimigo_hp).toFixed(1)+' • CE '+Number(b.entity?.ce||0).toFixed(0)+'</p><div class="skill-card" style="margin:10px 0"><b>Registro</b><p>'+(log||'O combate começou.')+'</p></div>'+actions+'<button class="main-btn blue-btn" onclick="carregarCaca()">← VOLTAR PARA CAÇA</button></div>';
   }catch(e){box.innerHTML='<div class="skill-card"><p>'+escaparXml(e.message)+'</p></div>';}
 }
 

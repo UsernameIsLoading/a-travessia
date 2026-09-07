@@ -694,7 +694,11 @@ def combat_stats_for(c,u):
     ce=round(base[3]+(nxt[3]-base[3])*soul,1)
     ct=base[4] if idx>=4 else min(nxt[4], base[4]+int(round((nxt[4]-base[4])*mind)))
     if grade=='Special Grade': hp,ce,ct=200,1000,10
-    return {'HP':hp,'CE':ce,'CT':ct,'maxHP':nxt[2],'maxCE':nxt[3],'maxCT':nxt[4]}
+    vm=vote_stat_multiplier(c,u['id'])
+    hp=round(hp*vm,1)
+    ce=round(ce*vm,1)
+    ct=min(10, int(__import__('math').ceil(ct*vm)))
+    return {'HP':hp,'CE':ce,'CT':ct,'maxHP':round(nxt[2]*vm,1),'maxCE':round(nxt[3]*vm,1),'maxCT':min(10,int(__import__('math').ceil(nxt[4]*vm))),'votoMultiplicador':vm}
 
 @app.get('/api/profile')
 def profile():
@@ -770,9 +774,15 @@ def toggle_skill(skill_id):
     c.commit();equipped=[r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],))];c.close();return jsonify(ok=True,equipadas=equipped,ct_usado=total)
 
 def vote_power_multiplier(c,uid):
-    # Cada voto vinculativo ativo aumenta o poder de combate em 10%.
+    # Cada Voto Vinculativo ativo aumenta em 20% o poder ofensivo.
     n=int(c.execute('SELECT COUNT(*) AS n FROM vote_bonuses WHERE user_id=?',(uid,)).fetchone()['n'] or 0)
-    return 1.0 + 0.10*min(n,3)
+    return 1.0 + 0.20*min(n,3)
+
+def vote_stat_multiplier(c,uid):
+    # O mesmo bônus de 20% é aplicado aos atributos de combate enquanto
+    # houver Votos Vinculativos ativos. Os votos podem acumular (até 3).
+    n=int(c.execute('SELECT COUNT(*) AS n FROM vote_bonuses WHERE user_id=?',(uid,)).fetchone()['n'] or 0)
+    return 1.0 + 0.20*min(n,3)
 
 def current_ct(c,uid):
     u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
@@ -812,13 +822,15 @@ def entities():
     out=[]
     for g in eligible:
         if g['grade']=='Grade 4' or random.random()<=g['chance']:
-            hp=int(g['hp']); damage=roll_dice(g['damage'][0]+'+'+g['damage'][1])
+            hp=int(g['hp'])
+            # O dado do ataque básico NÃO é rolado na criação da maldição.
+            # A expressão é guardada e um novo d4 é rolado a cada turno.
+            damage_expr='1d4'
             pool=[x for x in SKILLS if x[3]<=g['ct']]
             skills=[]
-            if g['ct']==1 and pool: skills=[random.choice(pool)]
-            elif g['ct']>=2 and pool:
+            if pool:
                 skills=random.sample(pool,min(len(pool),random.randint(1,min(3,len(pool)))))
-            out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage':damage,'ct':g['ct'],'ce':g['ce'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ce':x[4],'efeito':skill_dict(x[0])['efeito']} for x in skills]})
+            out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage_expr':damage_expr,'damage':damage_expr,'ct':g['ct'],'ce':g['ce'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ct':x[3],'ce':x[4],'efeito':skill_dict(x[0])['efeito']} for x in skills]})
     c.execute('INSERT INTO hunts(user_id,day,entities_json) VALUES(?,?,?)',(u['id'],iso(today()),json.dumps(out,ensure_ascii=False)));c.commit();c.close()
     return jsonify(usou=True,entidades=out,streak=days)
 
@@ -873,26 +885,50 @@ def entity_battle_action(bid):
     if b['status']!='active':c.close();return jsonify(error='Esse combate já terminou.'),400
     if b['turn']!='player':c.close();return jsonify(error='Aguarde o turno da maldição.'),400
     e=json.loads(b['entity_json']); hp=float(b['hp_player']); ce=float(b['ce_player']); ehp=float(b['hp_entity']); log=json.loads(b['log_json']); sid=d.get('skill_id'); dmg=0
+    # Turno do jogador: executa ataque básico ou técnica equipada.
     if sid:
         sk=skill_dict(sid); owned=c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=? AND equipped=1',(u['id'],sid)).fetchone()
         if not sk or not owned:c.close();return jsonify(error='Skill inválida ou não equipada.'),400
         if ce<sk['ce']:c.close();return jsonify(error='CE insuficiente.'),400
-        ce-=sk['ce'];
-        if '2d6' in sk['efeito']:dmg=random.randint(1,6)+random.randint(1,6)
-        elif '2d4' in sk['efeito']:dmg=random.randint(1,4)+random.randint(1,4)
-        elif '1d6' in sk['efeito']:dmg=random.randint(1,6)
-        elif '1d4' in sk['efeito']:dmg=random.randint(1,4)
-        dmg += sk['ct'] if sk['categoria']=='elementar' else 0
+        ce-=sk['ce']
+        base=sk['ct']
+        dice_match=__import__('re').search(r'(\d+d\d+)',sk['efeito'])
+        if dice_match: dmg=base+roll_dice(dice_match.group(1))
+        else: dmg=base+random.randint(1,4)
         dmg=round(dmg*vote_power_multiplier(c,u['id']))
         log.append(f'Você usou {sk["nome"]} e causou {dmg} dano.')
-    else:dmg=round(random.randint(1,4)*vote_power_multiplier(c,u['id']));log.append(f'Você atacou e causou {dmg} dano.')
+    else:
+        dmg=round(random.randint(1,4)*vote_power_multiplier(c,u['id']))
+        log.append(f'Você atacou e causou {dmg} dano. (d4)')
     ehp=max(0,ehp-dmg)
     if ehp<=0:
         reward=entity_xp_reward(hp,e['hp']); c.execute('UPDATE users SET xp=xp+? WHERE id=?',(reward,u['id'])); log.append(f'Maldição derrotada! +{reward} XP.'); status='finished'; turn='player'
     else:
-        edmg=int(e['damage']); hp=max(0,hp-edmg); log.append(f'{e["grade"]} causou {edmg} dano.') ; status='finished' if hp<=0 else 'active'; turn='player'
-        if hp<=0: log.append('Você foi derrotado.');
-    c.execute('UPDATE entity_battles SET hp_player=?,ce_player=?,hp_entity=?,status=?,turn=?,log_json=? WHERE id=?',(hp,ce,ehp,status,turn,json.dumps(log,ensure_ascii=False),bid));c.commit();c.close();return jsonify(ok=True)
+        # A IA da maldição sorteia NOVAMENTE a cada ataque. A divisão é igual
+        # entre ataque básico e cada técnica disponível.
+        enemy_options=[{'tipo':'basic'}]+[{'tipo':'skill','skill':s} for s in e.get('skills',[]) ]
+        choice=random.choice(enemy_options)
+        if choice['tipo']=='skill':
+            es=choice['skill']
+            escost=int(es.get('ce',0) or 0)
+            if ce >= 0 and float(e.get('ce',0)) >= escost:
+                e['ce']=float(e.get('ce',0))-escost
+                effect=str(es.get('efeito',''))
+                m=__import__('re').search(r'(\d+d\d+)',effect)
+                edmg=int(es.get('ct',1) or 1) + (roll_dice(m.group(1)) if m else random.randint(1,4))
+                log.append(f'{e["grade"]} usou {es["nome"]} e causou {edmg} dano.')
+            else:
+                edmg=random.randint(1,4)
+                log.append(f'{e["grade"]} tentou usar {es["nome"]}, mas não tinha CE suficiente; atacou e causou {edmg} dano. (d4)')
+        else:
+            edmg=random.randint(1,4)
+            log.append(f'{e["grade"]} atacou e causou {edmg} dano. (d4)')
+        hp=max(0,hp-edmg); status='finished' if hp<=0 else 'active'; turn='player'
+        if hp<=0: log.append('Você foi derrotado.')
+        # Persiste a CE restante e o estado da maldição para o próximo sorteio.
+        b_entity=json.dumps(e,ensure_ascii=False)
+    if 'b_entity' not in locals(): b_entity=json.dumps(e,ensure_ascii=False)
+    c.execute('UPDATE entity_battles SET entity_json=?,hp_player=?,ce_player=?,hp_entity=?,status=?,turn=?,log_json=? WHERE id=?',(b_entity,hp,ce,ehp,status,turn,json.dumps(log,ensure_ascii=False),bid));c.commit();c.close();return jsonify(ok=True)
 
 @app.get('/api/pvp-status')
 def pvp_status():
