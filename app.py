@@ -554,6 +554,33 @@ def admin_import_sql():
         c.rollback();c.close();return jsonify(error='Falha ao importar SQL: '+str(e)),400
     c.close();return jsonify(ok=True,mensagem='Banco restaurado com sucesso. Atualize a página.')
 
+@app.post('/api/admin/reset-progress')
+def admin_reset_progress():
+    ok,err=require_admin()
+    if not ok:return err
+    c=db()
+    try:
+        # Preserva contas, personagens, missões e votos configurados.
+        # Reinicia apenas o progresso/estado derivado dos jogadores.
+        c.execute('DELETE FROM completions')
+        c.execute('DELETE FROM streaks')
+        c.execute('DELETE FROM user_skills')
+        c.execute('DELETE FROM battles')
+        c.execute('DELETE FROM hunts')
+        c.execute('DELETE FROM entity_battles')
+        c.execute('DELETE FROM pvp_daily')
+        c.execute('DELETE FROM pvp_challenges')
+        if DATABASE_URL:
+            c.execute("UPDATE users SET xp=0, progress_started_at=created_at")
+        else:
+            c.execute("UPDATE users SET xp=0, progress_started_at=created_at")
+        c.commit(); c.close()
+        return jsonify(ok=True,mensagem='Progresso de todos os jogadores foi resetado. Contas, personagens, missões e votos foram preservados.')
+    except Exception as e:
+        try:c.rollback();c.close()
+        except Exception:pass
+        return jsonify(error=f'Não foi possível resetar o progresso: {e}'),500
+
 @app.post('/api/admin/reset-db')
 def admin_reset_db():
     ok,err=require_admin()
@@ -823,7 +850,12 @@ def get_entity_battle(bid):
     if err:return err
     c=db();b=c.execute('SELECT * FROM entity_battles WHERE id=? AND user_id=?',(bid,u['id'])).fetchone()
     if not b:c.close();return jsonify(error='Combate não encontrado.'),404
-    e=json.loads(b['entity_json']); log=json.loads(b['log_json']); c.close();return jsonify(id=bid,entity=e,seu_hp=float(b['hp_player']),seu_ce=float(b['ce_player']),inimigo_hp=float(b['hp_entity']),status=b['status'],meu_turno=b['turn']=='player',log=log[-8:])
+    e=json.loads(b['entity_json']); log=json.loads(b['log_json'])
+    equipped=[]
+    for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],)):
+        sk=skill_dict(r['skill_id'])
+        if sk: equipped.append(sk)
+    c.close();return jsonify(id=bid,entity=e,seu_hp=float(b['hp_player']),seu_ce=float(b['ce_player']),inimigo_hp=float(b['hp_entity']),status=b['status'],meu_turno=b['turn']=='player',log=log[-8:],skills=equipped)
 
 @app.post('/api/entity-battles/<int:bid>/action')
 def entity_battle_action(bid):

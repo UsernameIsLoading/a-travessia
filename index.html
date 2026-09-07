@@ -665,10 +665,15 @@ button{cursor:pointer}
       <input id="adminSqlFile" type="file" accept=".sql,text/sql,application/sql" style="margin:10px 0;width:100%;">
       <button class="main-btn purple-btn" type="button" onclick="restaurarBackupSQL()">📥 RESTAURAR SQL</button>
     </div>
+    <div class="skill-card" style="border:1px solid rgba(255,190,0,.35);">
+      <h2>🔄 Resetar progresso</h2>
+      <p>Apaga somente o progresso dos jogadores: XP, técnicas desbloqueadas, conclusões, streaks, combates, caças e estado de PvP. <b>Contas, personagens, Skill Trees, missões e votos vinculativos são preservados.</b></p>
+      <button class="main-btn purple-btn" type="button" onclick="resetarProgressoAdmin()">🔄 RESETAR PROGRESSO</button>
+    </div>
     <div class="skill-card" style="border:1px solid rgba(255,60,60,.35);">
-      <h2>☢️ Resetar banco de dados</h2>
+      <h2>☢️ Apagar banco inteiro</h2>
       <p style="color:var(--vermelho2);"><b>PERIGO:</b> apaga contas, personagens, missões, votos, skills, streaks e combates. O banco continua com a estrutura do sistema e o ADMIN é recriado automaticamente em modo mestre.</p>
-      <button class="main-btn red-btn" type="button" onclick="resetarBancoAdmin()">☢️ RESETAR BANCO</button>
+      <button class="main-btn red-btn" type="button" onclick="resetarBancoAdmin()">☢️ APAGAR BANCO INTEIRO</button>
     </div>
     <div class="skill-card">
       <div class="todos-head"><div><h2>👥 Jogadores</h2><p id="adminResumo">Carregando...</p></div><button class="main-btn blue-btn" type="button" onclick="carregarAdmin()">ATUALIZAR</button></div>
@@ -1519,6 +1524,58 @@ async function abrirBatalha(id){
 }
 async function acaoBatalha(id,skill){try{await api('/api/battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalha(id);}catch(e){alert(e.message);}}
 
+async function carregarCaca(){
+  const box=document.getElementById('cacaBox'), btn=document.getElementById('botaoCacar');
+  if(!box)return;
+  box.innerHTML='<p>Carregando caça...</p>';
+  try{
+    const data=await api('/api/entities');
+    const entidades=data.entidades||[];
+    if(btn) btn.disabled=!!data.usou && entidades.length===0;
+    if(!entidades.length){
+      box.innerHTML='<div class="skill-card"><p>Não há maldições disponíveis para enfrentar hoje. Volte amanhã para uma nova caça.</p></div>';
+      return;
+    }
+    box.innerHTML=entidades.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p><b>HP:</b> ${Number(e.hp).toFixed(0)} • <b>CE:</b> ${Number(e.ce).toFixed(0)} • <b>CT:</b> ${Number(e.ct).toFixed(0)}</p><p><b>Dano:</b> ${Number(e.damage).toFixed(0)} • <b>Técnicas:</b> ${(e.skills||[]).length}</p><div>${(e.skills||[]).map(s=>`<span class="skill-meta" style="display:inline-block;margin:3px">${escaparXml(s.nome)}</span>`).join('')}</div><button class="main-btn red-btn" onclick='iniciarLutaMaldicao(${JSON.stringify(e).replace(/</g,'\u003c')})'>⚔ LUTAR</button></div>`).join('');
+  }catch(e){box.innerHTML=`<div class="skill-card"><p>${escaparXml(e.message)}</p></div>`;}
+}
+
+async function cacarMaldicao(){
+  const btn=document.getElementById('botaoCacar');
+  if(btn)btn.disabled=true;
+  try{await api('/api/hunt',{method:'POST'});await carregarCaca();}
+  catch(e){if(btn)btn.disabled=false;alert(e.message);}
+}
+
+async function iniciarLutaMaldicao(entity){
+  try{
+    const r=await api('/api/entity-battles',{method:'POST',body:JSON.stringify({entity})});
+    await abrirBatalhaMaldicao(r.id);
+  }catch(e){alert(e.message);await carregarCaca();}
+}
+
+async function abrirBatalhaMaldicao(id){
+  const box=document.getElementById('combateBox');
+  try{
+    const b=await api('/api/entity-battles/'+id);
+    const skills=b.skills||[];
+    const log=(b.log||[]).slice(-8).map(escaparXml).join('<br>');
+    let actions='';
+    if(b.status==='active' && b.meu_turno){
+      actions+='<button class="main-btn blue-btn" onclick="acaoMaldicao('+id+',null)">ATAQUE BÁSICO</button>';
+      actions+=skills.map(s=>'<button class="main-btn purple-btn" onclick="acaoMaldicao('+id+',\''+escaparXml(s.id)+'\')">'+escaparXml(s.nome)+' — '+s.ce+' CE • '+escaparXml(s.efeito)+'</button>').join('');
+    }else{
+      actions='<p><b>'+(b.status==='active'?'Turno da maldição. Aguarde...':'Combate encerrado.')+'</b></p>';
+    }
+    box.innerHTML='<div class="skill-card"><h2>☠️ '+escaparXml(b.entity.grade)+' — COMBATE</h2><p><b>Você:</b> HP '+Number(b.seu_hp).toFixed(1)+' • CE '+Number(b.seu_ce).toFixed(1)+' | <b>Maldição:</b> HP '+Number(b.inimigo_hp).toFixed(1)+'</p><div class="skill-card" style="margin:10px 0"><b>Registro</b><p>'+(log||'O combate começou.')+'</p></div>'+actions+'<button class="main-btn blue-btn" onclick="carregarCaca()">← VOLTAR PARA CAÇA</button></div>';
+  }catch(e){box.innerHTML='<div class="skill-card"><p>'+escaparXml(e.message)+'</p></div>';}
+}
+
+async function acaoMaldicao(id,skill){
+  try{await api('/api/entity-battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalhaMaldicao(id);}
+  catch(e){alert(e.message);}
+}
+
 async function carregarAdmin(){
   const box=document.getElementById('adminUsers');
   try{
@@ -1553,6 +1610,16 @@ async function restaurarBackupSQL(){
   try{const r=await api('/api/admin/import-sql',{method:'POST',body:fd});alert(r.mensagem||'Banco restaurado.');await carregarAdmin();}
   catch(e){alert(e.message);}
 }
+async function resetarProgressoAdmin(){
+  const confirmacao=prompt('Isso apagará somente o PROGRESSO de todos os jogadores, preservando contas, personagens, missões e votos. Digite RESETAR para confirmar:');
+  if(confirmacao!=='RESETAR')return;
+  try{
+    const r=await api('/api/admin/reset-progress',{method:'POST'});
+    alert(r.mensagem||'Progresso resetado.');
+    await carregarAdmin();
+  }catch(e){alert(e.message||'Não foi possível resetar o progresso.');}
+}
+
 async function resetarBancoAdmin(){
   const confirmacao=prompt('Isso apagará TODO o banco. Digite RESETAR para confirmar:');
   if(confirmacao!=='RESETAR')return;
