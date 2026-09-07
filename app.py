@@ -33,71 +33,128 @@ GRADE_STATS = [
 # Identidade visual da Skill Tree. As imagens são referências externas; o site
 # continua funcionando mesmo se uma imagem externa estiver indisponível.
 TREE_META = {
- 'shrine': ('Ryomen Sukuna','Tenha orgulho, você é forte.','https://static.zerochan.net/Sukuna.full.3814718.jpg','Malevolent Shrine'),
- 'limitless': ('Satoru Gojo','No céu e na terra, apenas eu sou o honrado.','https://static.zerochan.net/Gojou.Satoru.full.3974287.jpg','Unlimited Void'),
- 'ten-shadows': ('Megumi Fushiguro','Com minha própria vida, salvarei as pessoas de forma desigual.','https://static.zerochan.net/Megumi.Fushiguro.full.3233980.jpg','Chimera Shadow Garden'),
- 'cursed-spirit-manipulation': ('Suguru Geto','Você é o mais forte porque é Satoru Gojo?','https://static.zerochan.net/Suguru.Getou.full.3587532.jpg','Womb Profusion'),
- 'idle-transfiguration': ('Mahito','A vida não tem peso ou valor particular.','https://static.zerochan.net/Mahito.full.3679477.jpg','Self-Embodiment of Perfection'),
- 'straw-doll': ('Nobara Kugisaki','Eu sou Nobara Kugisaki.','https://static.zerochan.net/Kugisaki.Nobara.full.3522408.jpg','—'),
- 'ratio': ('Kento Nanami','Trabalho é uma merda.','https://static.zerochan.net/Nanami.Kento.full.3574668.jpg','—'),
- 'projection': ('Naobito Zenin','Eu sou o feiticeiro mais rápido da família Zenin.','https://static.zerochan.net/Naobito.Zenin.full.3518074.jpg','—'),
- 'blood': ('Choso','Eu sou seu irmão mais velho.','https://static.zerochan.net/Choso.full.3769572.jpg','—'),
- 'boogie-woogie': ('Aoi Todo','O ato do aplauso é uma aclamação da alma!','https://static.zerochan.net/Toudou.Aoi.full.3595620.jpg','—'),
- 'cursed-speech': ('Toge Inumaki','Salmão.','https://static.zerochan.net/Inumaki.Toge.full.3572672.jpg','—'),
- 'copy': ('Yuta Okkotsu','Rika.','https://static.zerochan.net/Okkotsu.Yuuta.full.3814945.jpg','Authentic Mutual Love'),
- 'construction': ('Yorozu','Eu vou me casar com você.','https://static.zerochan.net/Yorozu.full.3884581.jpg','Threefold Affliction'),
- 'star-rage': ('Yuki Tsukumo','Que tipo de garota você gosta?','https://static.zerochan.net/Tsukumo.Yuki.full.3741404.jpg','—'),
- 'sky': ('Takako Uro','Eu odeio a luz do sol.','https://static.zerochan.net/Uro.Takako.full.3895237.jpg','—'),
- 'granite-blast': ('Ryu Ishigori','A vida não tem sabor.','https://static.zerochan.net/Ishigori.Ryu.full.3794875.jpg','—'),
- 'comedian': ('Fumihiko Takaba','Se eu não achar engraçado, não tem graça.','https://static.zerochan.net/Takaba.Fumihiko.full.3879420.jpg','—'),
- 'technique-extinguishment': ('Hana Kurusu / Angel','Devolva Megumi para mim!','https://static.zerochan.net/Kurusu.Hana.full.3825632.jpg','Jacob’s Ladder'),
- 'inverse': ('Jiro Awasaka','Eu sou um homem que sobrevive.','https://static.zerochan.net/Awasaka.Jiro.full.3471446.jpg','—'),
- 'seance': ('Ogami','Eu trouxe de volta um feiticeiro.','https://static.zerochan.net/Ogami.full.3491297.jpg','—'),
- 'puppet': ('Kokichi Muta','Encontre sua felicidade.','https://static.zerochan.net/Muta.Kokichi.full.3478074.jpg','—'),
- 'auspicious-beasts': ('Takuma Ino','Eu vou dar o meu melhor.','https://static.zerochan.net/Ino.Takuma.full.3577997.jpg','—'),
- 'rot': ('Eso','Nós somos irmãos.','https://static.zerochan.net/Eso.full.3486672.jpg','—'),
- 'cloning': ('Bata-bata','Uma técnica pode ser usada de muitas formas.','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','—'),
- 'miracles': ('Haruta Shigemo','Eu sempre tive sorte.','https://static.zerochan.net/Shigemo.Haruta.full.3513412.jpg','—'),
- 'ice': ('Uraume','Sukuna-sama.','https://static.zerochan.net/Uraume.full.3801224.jpg','—'),
- 'disaster-flames': ('Jogo','Eu sou um espírito amaldiçoado.','https://static.zerochan.net/Jougo.full.3552467.jpg','Coffin of the Iron Mountain'),
- 'disaster-plants': ('Hanami','Os humanos precisam desaparecer.','https://static.zerochan.net/Hanami.full.3485955.jpg','—'),
- 'disaster-tides': ('Dagon','Eu nasci do medo do mar.','https://static.zerochan.net/Dagon.full.3550937.jpg','Horizon of the Captivating Skandha'),
- 'contractual-recreation': ('Reggie Star','Eu não sou um homem de promessas vazias.','https://static.zerochan.net/Reggie.Star.full.3825626.jpg','—'),
- 'love-rendezvous': ('Kirara Hoshi','Eu não quero perder meu tempo.','https://static.zerochan.net/Hoshi.Kirara.full.3840985.jpg','—'),
- 'solo-forbidden-area': ('Utahime Iori','Não subestime os feiticeiros de Kyoto.','https://static.zerochan.net/Iori.Utahime.full.3577957.jpg','—'),
- 'black-bird': ('Mei Mei','Dinheiro é tudo que importa.','https://static.zerochan.net/Mei.Mei.full.3577958.jpg','—'),
- 'mythical-beast-amber': ('Hajime Kashimo','Eu estava esperando por você.','https://static.zerochan.net/Kashimo.Hajime.full.3852290.jpg','—'),
- 'prayer-song': ('Yasohachi Bridge User','Oração é a força de uma vontade.','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','—'),
- 'antigravity': ('Kenjaku','A evolução humana é fascinante.','https://static.zerochan.net/Kenjaku.full.3791075.jpg','Womb Profusion'),
- 'light': ('Miguel','Eu não tenho tempo para isso.','https://static.zerochan.net/Miguel.full.3902188.jpg','—'),
- 'smallpox': ('Smallpox Deity','—','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','Smallpox Deity Domain'),
- 'deadly-sentencing': ('Hiromi Higuruma','Confie no julgamento.','https://static.zerochan.net/Higuruma.Hiromi.full.3847165.jpg','Deadly Sentencing'),
- 'idle-death-gamble': ('Kinji Hakari','Jackpot!','https://static.zerochan.net/Hakari.Kinji.full.3823831.jpg','Idle Death Gamble'),
- 'womb-profusion': ('Kenjaku','A evolução humana é fascinante.','https://static.zerochan.net/Kenjaku.full.3791075.jpg','Womb Profusion'),
- 'threefold-affliction': ('Yorozu','Eu vou me casar com você.','https://static.zerochan.net/Yorozu.full.3884581.jpg','Threefold Affliction'),
- 'authentic-mutual-love': ('Yuta Okkotsu','Rika.','https://static.zerochan.net/Okkotsu.Yuuta.full.3814945.jpg','Authentic Mutual Love'),
- 'hanami-domain': ('Hanami','Os humanos precisam desaparecer.','https://static.zerochan.net/Hanami.full.3485955.jpg','Domain Expansion'),
- 'dabura-domain': ('Dabura','Eu sou o rei do submundo.','https://static.zerochan.net/Jujutsu.Kaisen.full.4573758.jpg','Domain Expansion'),
- 'yuji-domain': ('Yuji Itadori','Eu sou só um feiticeiro.','https://static.zerochan.net/Itadori.Yuuji.full.3974286.jpg','Domain Expansion'),
+ 'shrine': ('Ryomen Sukuna','Tenha orgulho. Você é forte.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Sukuna.png','Malevolent Shrine'),
+ 'limitless': ('Satoru Gojo','Através do céu a terra, apenas eu sou o honrado.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Satoru%20Gojo%20%28Anime%29.png','Unlimited Void'),
+ 'ten-shadows': ('Megumi Fushiguro','Com minha própria vida, salvarei as pessoas de forma desigual.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Megumi%20Fushiguro%20%28Anime%29.png','Chimera Shadow Garden'),
+ 'cursed-spirit-manipulation': ('Suguru Geto','Você é o mais forte porque é Satoru Gojo? Ou você é Satoru Gojo porque é o mais forte?','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Suguru%20Geto.png','—'),
+ 'idle-transfiguration': ('Mahito','A vida não tem peso ou valor particular.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Mahito.png','Self-Embodiment of Perfection'),
+ 'straw-doll': ('Nobara Kugisaki','Eu sou Nobara Kugisaki.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Nobara%20Kugisaki%20%28Anime%29.png','—'),
+ 'ratio': ('Kento Nanami','Trabalho é uma merda.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Kento%20Nanami.png','—'),
+ 'projection': ('Naobito Zenin','Eu sou o feiticeiro mais rápido da família Zenin.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Naobito%20Zenin.png','—'),
+ 'blood': ('Choso','Eu sou seu irmão mais velho.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Choso.png','—'),
+ 'boogie-woogie': ('Aoi Todo','O ato do aplauso é uma aclamação da alma!','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Aoi%20Todo%20%28Anime%29.png','—'),
+ 'cursed-speech': ('Toge Inumaki','Salmão.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Toge%20Inumaki%20%28Anime%29.png','—'),
+ 'copy': ('Yuta Okkotsu','Rika.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Yuta%20Okkotsu%20%28Anime%29.png','Authentic Mutual Love'),
+ 'construction': ('Yorozu','Eu vou me casar com você.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Yorozu.png','Threefold Affliction'),
+ 'star-rage': ('Yuki Tsukumo','Que tipo de garota você gosta?','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Yuki%20Tsukumo%20%28Anime%29.png','—'),
+ 'sky': ('Takako Uro','Eu odeio a luz do sol.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Takako%20Uro.png','—'),
+ 'granite-blast': ('Ryu Ishigori','A vida não tem sabor.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Ryu%20Ishigori.png','—'),
+ 'comedian': ('Fumihiko Takaba','Se eu não achar engraçado, não tem graça.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Fumihiko%20Takaba.png','—'),
+ 'technique-extinguishment': ('Hana Kurusu / Angel','Devolva Megumi para mim!','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Hana%20Kurusu%20%28Anime%29.png','—'),
+ 'inverse': ('Jiro Awasaka','Eu sou um homem que sobrevive.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Jiro%20Awasaka.png','—'),
+ 'seance': ('Ogami','Eu trouxe de volta um feiticeiro.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Ogami.png','—'),
+ 'puppet': ('Kokichi Muta','Encontre sua felicidade.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Kokichi%20Muta%20%28Anime%29.png','—'),
+ 'auspicious-beasts': ('Takuma Ino','Eu vou dar o meu melhor.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Takuma%20Ino%20%28Anime%29.png','—'),
+ 'rot': ('Eso','Nós somos irmãos.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Eso.png','—'),
+ 'cloning': ('Clone User','Uma técnica pode ser usada de muitas formas.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Jujutsu%20Kaisen.png','—'),
+ 'miracles': ('Haruta Shigemo','Eu sempre tive sorte.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Haruta%20Shigemo.png','—'),
+ 'ice': ('Uraume','Sukuna-sama.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Uraume%20%28Anime%29.png','—'),
+ 'disaster-flames': ('Jogo','Eu sou um espírito amaldiçoado.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Jogo.png','Coffin of the Iron Mountain'),
+ 'disaster-plants': ('Hanami','Os humanos precisam desaparecer.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Hanami.png','—'),
+ 'disaster-tides': ('Dagon','Eu nasci do medo do mar.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Dagon.png','Horizon of the Captivating Skandha'),
+ 'contractual-recreation': ('Reggie Star','Eu não sou um homem de promessas vazias.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Reggie%20Star.png','—'),
+ 'love-rendezvous': ('Kirara Hoshi','Eu não quero perder meu tempo.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Kirara%20Hoshi.png','—'),
+ 'solo-forbidden-area': ('Utahime Iori','Não subestime os feiticeiros de Kyoto.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Utahime%20Iori%20%28Anime%29.png','—'),
+ 'black-bird': ('Mei Mei','Dinheiro é tudo que importa.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Mei%20Mei.png','—'),
+ 'mythical-beast-amber': ('Hajime Kashimo','Eu estava esperando por você.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Hajime%20Kashimo.png','—'),
+ 'prayer-song': ('Prayer Song User','—','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Jujutsu%20Kaisen.png','—'),
+ 'antigravity': ('Kenjaku','A evolução humana é fascinante.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Kenjaku.png','Womb Profusion'),
+ 'light': ('Miguel','Eu não tenho tempo para isso.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Miguel.png','—'),
+ 'yuji': ('Yuji Itadori','Eu sou só um feiticeiro.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Yuji%20Itadori%20%28Anime%29.png','Domain Expansion'),
+}
+DOMAIN_ONLY = {'smallpox','deadly-sentencing','idle-death-gamble','womb-profusion','threefold-affliction','authentic-mutual-love','hanami-domain','dabura-domain','yuji-domain'}
+SKILL_TREE_NAMES = {k:v[0] for k,v in TREE_META.items()}
+SKILL_TREE_OPTIONS_TEXT = {k:v[0] for k,v in TREE_META.items() if k not in DOMAIN_ONLY}
+DOMAIN_NODE_NAMES = {
+ 'smallpox':'Smallpox Deity Domain','deadly-sentencing':'Deadly Sentencing','idle-death-gamble':'Idle Death Gamble',
+ 'womb-profusion':'Womb Profusion','threefold-affliction':'Threefold Affliction','authentic-mutual-love':'Authentic Mutual Love',
+ 'hanami-domain':'Hanami Domain','dabura-domain':'Dabura Domain','yuji-domain':'Yuji Domain'
+}
+DOMAIN_NODE_MAP = {
+ 'shrine':'Malevolent Shrine','limitless':'Unlimited Void','ten-shadows':'Chimera Shadow Garden',
+ 'cursed-spirit-manipulation':'—','idle-transfiguration':'Self-Embodiment of Perfection','copy':'Authentic Mutual Love',
+ 'construction':'Threefold Affliction','technique-extinguishment':'—','disaster-flames':'Coffin of the Iron Mountain',
+ 'disaster-tides':'Horizon of the Captivating Skandha','antigravity':'Womb Profusion','deadly-sentencing':'Deadly Sentencing',
+ 'idle-death-gamble':'Idle Death Gamble','hanami-domain':'Hanami Domain','dabura-domain':'Dabura Domain','yuji-domain':'Yuji Domain'
 }
 
-DOMAIN_TREES = {k:v[3] for k,v in TREE_META.items() if v[3] != '—'}
-SKILL_TREE_NAMES = {"antigravity": "Antigravity System", "auspicious-beasts": "Auspicious Beasts Summon", "authentic-mutual-love": "Authentic Mutual Love Domain", "black-bird": "Black Bird Manipulation", "blood": "Blood Manipulation", "boogie-woogie": "Boogie Woogie", "cloning": "Cloning Technique", "comedian": "Comedian", "construction": "Construction", "contractual-recreation": "Contractual Re-Creation", "copy": "Copy", "cursed-speech": "Cursed Speech", "cursed-spirit-manipulation": "Cursed Spirit Manipulation", "dabura-domain": "Dabura Domain", "deadly-sentencing": "Deadly Sentencing Domain", "disaster-flames": "Disaster Flames", "disaster-plants": "Disaster Plants", "disaster-tides": "Disaster Tides", "granite-blast": "Granite Blast", "hanami-domain": "Hanami Domain", "ice": "Ice Formation", "idle-death-gamble": "Idle Death Gamble Domain", "idle-transfiguration": "Idle Transfiguration", "inverse": "Inverse", "light": "Light", "limitless": "Limitless", "love-rendezvous": "Love Rendezvous", "miracles": "Miracles", "mythical-beast-amber": "Mythical Beast Amber", "prayer-song": "Prayer Song", "projection": "Projection Sorcery", "puppet": "Puppet Manipulation", "ratio": "Ratio Technique", "rot": "Rot Technique", "seance": "Séance Technique", "shrine": "Shrine", "sky": "Sky Manipulation", "smallpox": "Smallpox Deity Domain", "solo-forbidden-area": "Solo Forbidden Area", "star-rage": "Star Rage", "straw-doll": "Straw Doll Technique", "technique-extinguishment": "Technique Extinguishment", "ten-shadows": "Ten Shadows Technique", "threefold-affliction": "Threefold Affliction Domain", "womb-profusion": "Womb Profusion Domain", "yuji-domain": "Yuji Domain"}
-SKILL_TREE_OPTIONS_TEXT = {k:v for k,v in SKILL_TREE_NAMES.items()}
-
-SKILLS = [
-('bola-fogo','Bola de Fogo','elementar',2,10,'1d6 de dano.'),('explosao-ignea','Explosão Ígnea','elementar',3,25,'2d4 de dano.'),('muralha-fogo','Muralha de Fogo','elementar',3,20,'1d4 de dano por 3 turnos.'),('incinerar','Incinerar','elementar',4,40,'2d6 de dano.'),('chama-negra','Chama Negra','elementar',5,50,'2d6 de dano e ignora parte da defesa.'),
-('pedrada','Pedrada','elementar',1,5,'1d4 de dano.'),('lanca-pedra','Lança de Pedra','elementar',2,12,'1d6 de dano.'),('terremoto','Terremoto','elementar',4,35,'2d4 de dano e pode atordoar.'),('armadura-terra','Armadura de Terra','elementar',3,20,'Reduz o próximo dano recebido em 1d4.'),('jato-agua','Jato d’Água','elementar',1,5,'1d4 de dano.'),
-('onda-violenta','Onda Violenta','elementar',3,25,'2d4 de dano.'),('prisao-agua','Prisão de Água','elementar',4,30,'1d4 de dano e pode impedir a próxima ação.'),('tsunami','Tsunami','elementar',5,60,'2d6 de dano.'),('rajada-vento','Rajada de Vento','elementar',1,5,'1d4 de dano.'),('lamina-vento','Lâmina de Vento','elementar',2,15,'1d6 de dano.'),
-('tornado','Tornado','elementar',4,35,'2d4 de dano e pode controlar o alvo.'),('raio','Raio','elementar',2,15,'1d6 de dano.'),('tempestade','Tempestade','elementar',4,40,'2d6 de dano.'),('congelamento','Congelamento','elementar',3,20,'1d4 de dano e pode impedir uma ação.'),('raio-solar','Raio Solar','elementar',5,50,'2d6 de dano.'),
-('artes-marciais','Artes Marciais','reforco',1,0,'Ataques básicos causam +1 dano.'),('forca-bruta','Força Bruta','reforco',2,10,'Próximo ataque recebe +1d4 de dano.'),('fortificacao','Fortificação','reforco',2,15,'Reduz o próximo dano recebido em 1d4.'),('cura','Cura','reforco',2,20,'Recupera 1d6 HP.'),('grande-cura','Grande Cura','reforco',4,40,'Recupera 2d6 HP.'),
-('segundo-folego','Segundo Fôlego','reforco',3,30,'Recupera 1d6 HP e remove um efeito negativo.'),('voar','Voar','reforco',1,5,'Reduz a chance de ataques físicos por 2 turnos.'),('foco-absoluto','Foco Absoluto','reforco',2,15,'Próximo ataque recebe +2 dano.'),('concentracao','Concentração','reforco',2,10,'Recupera 1d4 CE.'),('meditacao','Meditação','reforco',3,20,'Recupera 1d6 CE.'),
-('reservas-energia','Reservas de Energia','reforco',4,30,'Recupera 2d6 CE.'),('adrenalina','Adrenalina','reforco',3,15,'Abaixo de 25% HP, recebe +2 dano.'),('golpe-poderoso','Golpe Poderoso','reforco',2,15,'Próximo ataque sobe uma categoria de dano.'),('combo','Combo','reforco',3,25,'Faz dois ataques de 1d4.'),('agilidade','Agilidade','reforco',2,10,'Chance de evitar completamente o próximo ataque.'),
-('postura-defensiva','Postura Defensiva','reforco',2,10,'Reduz dano recebido em 2 por 2 turnos.'),('sobrecarga','Sobrecarga','reforco',4,30,'Próxima skill ofensiva sobe uma categoria.'),('determinacao','Determinação','reforco',3,20,'Se chegaria a 0 HP, fica com 1 HP.'),('regeneracao','Regeneração','reforco',4,25,'Recupera 1d4 HP por 3 turnos.'),('equilibrio','Equilíbrio','reforco',5,30,'Por 3 turnos, causa +2 e recebe -2 dano.'),
-('sangramento','Sangramento','enfraquecimento',2,10,'1d4 de dano por 3 turnos.'),('veneno','Veneno','enfraquecimento',3,15,'1d4 de dano por 4 turnos.'),('queimadura','Queimadura','enfraquecimento',2,10,'1d4 de dano no início do próximo turno.'),('congelar','Congelar','enfraquecimento',3,20,'Chance de impedir a próxima ação.'),('atordoamento','Atordoamento','enfraquecimento',3,25,'Chance de perder a próxima ação.'),
-('cegueira','Cegueira','enfraquecimento',3,20,'Próximo ataque tem chance de errar.'),('lentidao','Lentidão','enfraquecimento',2,15,'Reduz a capacidade ofensiva por 2 turnos.'),('silencio','Silêncio','enfraquecimento',4,30,'Impede uso de skills por 1 turno.'),('maldicao','Maldição','enfraquecimento',4,35,'Recebe +2 dano de todas as fontes por 3 turnos.'),('infeccao','Infecção','enfraquecimento',3,20,'Recebe +1 dano durante 4 turnos.'),
-('confusao','Confusão','enfraquecimento',4,25,'Chance de perder a ação.'),('medo','Medo','enfraquecimento',2,15,'Causa -2 dano por 2 turnos.'),('aprisionamento','Aprisionamento','enfraquecimento',4,30,'Impede ataques físicos por 1 turno.'),('perturbacao-mental','Perturbação Mental','enfraquecimento',3,20,'Próxima skill custa +10 CE.'),('drenagem','Drenagem','enfraquecimento',4,30,'Rouba 1d4 CE.'),
-('dreno-vital','Dreno Vital','enfraquecimento',5,40,'1d6 de dano e recupera metade do dano.'),('fragilidade','Fragilidade','enfraquecimento',3,20,'Próximo dano recebido recebe +1d4.'),('provocacao','Provocação','enfraquecimento',2,5,'Oponente é obrigado a usar ataque básico no próximo turno.'),('exaustao','Exaustão','enfraquecimento',4,25,'Próxima skill custa +50% CE.'),('sentenca','Sentença','enfraquecimento',5,50,'Após 3 turnos, causa 2d6 de dano.')]
+# id, name, category, CT, CE, effect, tree
+SKILL_DATA = [
+('dismantle','Desmantelar','ofensiva',1,5,'Dano baixo: 1 + 1d4.','shrine'),
+('cleave','Fatiar','ofensiva',2,20,'Dano comum: 2 + 1d6.','shrine'),
+('spiderweb','Teia de Aranha','controle',3,80,'Dano alto: 3 + 2d4 e reduz a precisão do alvo.','shrine'),
+('furnace','Fornalha','maxima',4,240,'Dano muito alto: 4 + 2d6; deixa o alvo queimando.','shrine'),
+('blue','Azul','espacial',1,5,'Puxa o alvo e causa dano baixo: 1 + 1d4.','limitless'),
+('red','Vermelho','espacial',2,20,'Repulsão; dano comum: 2 + 1d6.','limitless'),
+('hollow-purple','Vazio Roxo','maxima',4,240,'Dano muito alto: 4 + 2d6 e ignora parte da defesa.','limitless'),
+('divine-dogs','Cães Divinos','invocacao',1,5,'Invoca um shikigami para causar dano baixo.','ten-shadows'),
+('nue','Nue','invocacao',2,20,'Ataque aéreo; dano comum e chance de atordoar.','ten-shadows'),
+('max-elephant','Max Elephant','invocacao',2,20,'Jato de água e pressão; dano comum.','ten-shadows'),
+('rabbit-escape','Rabbit Escape','invocacao',1,5,'Cria múltiplas distrações e reduz a precisão do alvo.','ten-shadows'),
+('piercing-ox','Piercing Ox','invocacao',3,80,'Investida; dano alto: 3 + 2d4.','ten-shadows'),
+('mahoraga','Mahoraga','maxima',4,240,'Adaptação; após sobreviver a um efeito, ganha resistência a ele.','ten-shadows'),
+('uzumaki','Uzumaki','maxima',4,240,'Dano muito alto: 4 + 2d6 usando energia de espíritos acumulados.','cursed-spirit-manipulation'),
+('curse-command','Espíritos Amaldiçoados','invocacao',1,5,'Invoca um espírito para aplicar um efeito de controle.','cursed-spirit-manipulation'),
+('idle-transfiguration','Transfiguração Ociosa','alma',2,20,'Altera a forma da alma; dano comum e pode aplicar técnica bloqueada.','idle-transfiguration'),
+('resonance','Ressonância','ofensiva',2,20,'Ataque à distância; dano comum e ignora parte da defesa.','straw-doll'),
+('hairpin','Hairpin','ofensiva',3,80,'Explosão retardada; dano alto: 3 + 2d4.','straw-doll'),
+('ratio-strike','Golpe de Proporção','ofensiva',1,5,'Dano baixo com chance aumentada de crítico.','ratio'),
+('collapse','Colapso','ofensiva',3,80,'Ataca uma proporção marcada; dano alto.','ratio'),
+('projection','Feitiçaria de Projeção','controle',2,20,'Acelera o usuário e pode fazer o alvo perder o próximo turno.','projection'),
+('blood-formation','Formação de Sangue','ofensiva',1,5,'Dano baixo e aplica sangramento.','blood'),
+('piercing-blood','Perfuração de Sangue','ofensiva',3,80,'Dano alto: 3 + 2d4 e sangramento.','blood'),
+('supernova','Supernova','maxima',4,240,'Explosão de sangue; dano muito alto.','blood'),
+('boogie-woogie','Boogie Woogie','versatil',2,20,'Troca posições; pode anular o próximo ataque recebido.','boogie-woogie'),
+('cursed-speech','Fala Amaldiçoada','controle',2,20,'Comando curto; pode impedir a próxima ação do alvo.','cursed-speech'),
+('copy','Copy','versatil',3,80,'Replica uma técnica já conhecida por tempo limitado.','copy'),
+('construction','Construção','versatil',2,20,'Cria um objeto; pode gerar vantagem defensiva ou ofensiva.','construction'),
+('star-rage','Star Rage','ofensiva',3,80,'Massa virtual; dano alto: 3 + 2d4.','star-rage'),
+('sky-manipulation','Manipulação do Céu','espacial',2,20,'Distorce o espaço e reduz a precisão do próximo ataque.','sky'),
+('granite-blast','Granite Blast','ofensiva',3,80,'Rajada de energia; dano alto: 3 + 2d4.','granite-blast'),
+('comedian','Comedian','especial',4,240,'Se o usuário considerar a situação engraçada, pode anular o último efeito sofrido.','comedian'),
+('jacobs-ladder','Escada de Jacó','anulacao',4,240,'Apaga técnicas amaldiçoadas ativas; dano muito alto.','technique-extinguishment'),
+('inverse','Inverse','defensiva',2,20,'Inverte parte do dano recebido, reduzindo ataques fortes.','inverse'),
+('seance','Séance','versatil',3,80,'Assume temporariamente características de um espírito invocado.','seance'),
+('puppet-manipulation','Manipulação de Marionetes','invocacao',2,20,'Controla uma marionete para causar dano comum.','puppet'),
+('auspicious-beasts','Bestas Auspiciosas','invocacao',2,20,'Invoca uma das Bestas Auspiciosas com efeito variável.','auspicious-beasts'),
+('rot-technique','Técnica Rot','ofensiva',2,20,'Aplica decomposição progressiva; dano comum e dano residual.','rot'),
+('cloning-technique','Técnica de Clonagem','versatil',2,20,'Cria um clone com parte do poder do usuário.','cloning'),
+('miracles','Milagres','especial',2,20,'Armazena pequenos milagres e evita um resultado ruim uma vez.','miracles'),
+('ice-formation','Formação de Gelo','controle',2,20,'Congela o alvo e pode impedir sua próxima ação.','ice'),
+('maximum-ice','Formação de Gelo Máxima','maxima',4,240,'Dano muito alto e congelamento.','ice'),
+('ember-insects','Insetos de Brasa','ofensiva',2,20,'Dano comum e queimadura.','disaster-flames'),
+('meteor','Meteoro','maxima',4,240,'Dano muito alto: 4 + 2d6.','disaster-flames'),
+('bud-flower','Broto de Flores','controle',2,20,'Cria raízes e reduz a precisão do alvo.','disaster-plants'),
+('water-shikigami','Shikigami Aquático','invocacao',2,20,'Dano comum e pressão de água.','disaster-tides'),
+('contractual-recreation','Recriação Contratual','versatil',2,20,'Materializa algo representado por um recibo/contrato.','contractual-recreation'),
+('love-rendezvous','Love Rendezvous','controle',2,20,'Marca posições e limita como alvos podem se aproximar.','love-rendezvous'),
+('solo-forbidden-area','Solo Forbidden Area','reforco',3,80,'Aumenta a eficiência da energia amaldiçoada de aliados próximos.','solo-forbidden-area'),
+('bird-strike','Bird Strike','ofensiva',3,80,'Ataque suicida de corvo; dano alto.','black-bird'),
+('mythical-beast-amber','Mythical Beast Amber','maxima',4,240,'Descarga de energia; dano muito alto, com alto custo.','mythical-beast-amber'),
+('prayer-song','Prayer Song','reforco',2,20,'Aprimora o usuário por meio de um cântico.','prayer-song'),
+('antigravity','Antigravity System','defensiva',3,80,'Manipula a gravidade para reduzir dano e controlar o campo.','antigravity'),
+('black-flash','Black Flash','ofensiva',3,80,'Golpe de energia precisa; dano alto e grande chance de crítico.','yuji'),
+]
+SKILLS = [(a,b,c,d,e,f) for a,b,c,d,e,f,_ in SKILL_DATA]
+SKILL_TREE_BY_ID = {x[0]:x[6] for x in SKILL_DATA}
+SKILL_PREREQS = {
+ 'cleave':['dismantle'],'spiderweb':['cleave'],'furnace':['dismantle','cleave'],
+ 'red':['blue'],'hollow-purple':['blue','red'],'mahoraga':['divine-dogs','nue','max-elephant','rabbit-escape','piercing-ox'],
+ 'uzumaki':['curse-command'],'hairpin':['resonance'],'supernova':['piercing-blood'],
+ 'meteor':['ember-insects'],'maximum-ice':['ice-formation'],'jacobs-ladder':['copy'],
+}
+# Trees that can be chosen by players. Domain-only nodes are intentionally absent.
+SELECTABLE_TREES = [k for k in TREE_META if k not in DOMAIN_ONLY]
 
 
 ENTITY_GRADES = [
@@ -179,7 +236,7 @@ def init_db():
     c=db()
     if DATABASE_URL:
         c.executescript('''
-        CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0,progress_started_at TEXT);
         CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
         CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body DOUBLE PRECISION NOT NULL DEFAULT 0,mind DOUBLE PRECISION NOT NULL DEFAULT 0,soul DOUBLE PRECISION NOT NULL DEFAULT 0,class_name TEXT,skill_tree TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS tasks(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
@@ -193,9 +250,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
         c.execute('ALTER TABLE characters ADD COLUMN IF NOT EXISTS skill_tree TEXT')
+        c.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_started_at TEXT')
+        c.execute("UPDATE users SET progress_started_at=COALESCE(progress_started_at, TO_CHAR(created_at, 'YYYY-MM-DD')) WHERE progress_started_at IS NULL")
     else:
         c.executescript('''
-        CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0,progress_started_at TEXT);
         CREATE TABLE IF NOT EXISTS characters(user_id INTEGER PRIMARY KEY,body REAL NOT NULL DEFAULT 0,mind REAL NOT NULL DEFAULT 0,soul REAL NOT NULL DEFAULT 0,class_name TEXT,skill_tree TEXT,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,text TEXT NOT NULL,class TEXT NOT NULL,type TEXT NOT NULL DEFAULT 'todo',frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS completions(task_id INTEGER NOT NULL,day TEXT NOT NULL,PRIMARY KEY(task_id,day),FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE);
@@ -211,6 +270,8 @@ def init_db():
         if 'frequency_json' not in cols: c.execute("ALTER TABLE tasks ADD COLUMN frequency_json TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]'")
         cols=[r['name'] for r in c.execute('PRAGMA table_info(users)')]
         if 'last_processed_day' not in cols: c.execute('ALTER TABLE users ADD COLUMN last_processed_day TEXT')
+        if 'progress_started_at' not in cols: c.execute('ALTER TABLE users ADD COLUMN progress_started_at TEXT')
+        c.execute("UPDATE users SET progress_started_at=COALESCE(progress_started_at, substr(created_at,1,10)) WHERE progress_started_at IS NULL")
         for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
             c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
     ensure_pvp_challenges(c)
@@ -229,9 +290,10 @@ def ensure_master_player(c):
         uid=insert_and_get_id(c,'INSERT INTO users(username,password_hash,xp) VALUES(?,?,?)',(MASTER_USERNAME,generate_password_hash(secrets.token_hex(24)),180))
     else:
         uid=row['id']; c.execute('UPDATE users SET xp=180 WHERE id=?',(uid,))
-    c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name,skill_tree) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name,skill_tree=excluded.skill_tree',(uid,100.0,100.0,100.0,'Special Grade','shrine'))
+    c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name,skill_tree) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name,skill_tree=excluded.skill_tree',(uid,3.0,3.0,3.0,'Special Grade','shrine'))
     for sid,*_ in SKILLS:
-        c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,1) ON CONFLICT(user_id,skill_id) DO UPDATE SET equipped=1',(uid,sid))
+        c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0) ON CONFLICT(user_id,skill_id) DO UPDATE SET equipped=COALESCE(user_skills.equipped,0)',(uid,sid))
+    c.execute('UPDATE users SET progress_started_at=? WHERE id=?', (iso(today()-timedelta(days=180)),uid))
     for cls in CLASSES:
         c.execute('INSERT INTO streaks(user_id,class,days,last_day) VALUES(?,?,180,?) ON CONFLICT(user_id,class) DO UPDATE SET days=180,last_day=excluded.last_day',(uid,cls,iso(today())))
     return uid
@@ -290,41 +352,67 @@ def _created_date(u):
     try:return date.fromisoformat(raw)
     except Exception:return today()
 
-def progression_for(c,u):
-    if str(u.get('username','')).upper()==MASTER_USERNAME.upper():
-        return {'grade':'Special Grade','score':100.0,'dias':180,'tenure':180,'next':None,'broken_vote':False,'hp':200,'ce':1000,'ct':999}
-    created=_created_date(u); elapsed=max(0,(today()-created).days)
-    tasks=get_tasks(c,u['id'])
-    # Consistência = compromissos realmente assumidos e cumpridos; dias sem
-    # compromisso não contam contra o jogador.
-    due=done=0
-    broken_vote=False
-    d=created
-    yesterday=today()-timedelta(days=1)
-    while d<=yesterday:
-        wd=d.weekday(); completed=completion_set(c,u['id'],iso(d))
+def _progress_window_start(u):
+    raw=u['progress_started_at'] if 'progress_started_at' in u.keys() else None
+    if raw:
+        try:return date.fromisoformat(str(raw)[:10])
+        except Exception:pass
+    return _created_date(u)
+
+def _class_consistency(c,uid,start,end):
+    tasks=get_tasks(c,uid); out={x:{'due':0,'done':0} for x in CLASSES}
+    d=start
+    while d<=end:
+        wd=d.weekday(); completed=completion_set(c,uid,iso(d))
         for t in tasks:
             if wd not in t['frequencia']: continue
-            due+=1
-            if t['id'] in completed: done+=1
-            elif t['tipo']=='voto': broken_vote=True
+            out[t['classe']]['due']+=1
+            if t['id'] in completed: out[t['classe']]['done']+=1
         d+=timedelta(days=1)
-    score=round((done/due)*100,1) if due else 0.0
-    # Quebrar qualquer voto vinculativo concluído/previsto no passado zera o
-    # ciclo de progressão. O dia de hoje só é avaliado ao terminar.
+    return out
+
+def progression_for(c,u):
+    if str(u['username']).upper()==MASTER_USERNAME.upper():
+        return {'grade':'Special Grade','score':100.0,'dias':180,'tenure':180,'next':None,'broken_vote':False,'hp':200,'ce':1000,'ct':10,'threshold':None,'remaining_days':0,'attribute_growth':{'corpo':10.0,'mente':10.0,'alma':10.0}}
+    start=_progress_window_start(u); elapsed=max(0,(today()-start).days)
+    tasks=get_tasks(c,u['id']); end=today()-timedelta(days=1)
+    due=done=0; broken_vote=False
+    if start<=end:
+        d=start
+        while d<=end:
+            wd=d.weekday(); completed=completion_set(c,u['id'],iso(d))
+            for t in tasks:
+                if wd not in t['frequencia']: continue
+                due+=1
+                if t['id'] in completed: done+=1
+                elif t['tipo']=='voto': broken_vote=True
+            d+=timedelta(days=1)
+    # A broken vow is permanent for the current cycle: reset the cycle start
+    # so deleting the vow later cannot erase the consequence.
     if broken_vote:
-        return {'grade':'Grade 4','score':0.0,'dias':0,'tenure':elapsed,'next':'Grade 3','broken_vote':True,'hp':70,'ce':250,'ct':3}
+        new_start=iso(today())
+        c.execute('UPDATE users SET progress_started_at=? WHERE id=?',(new_start,u['id']))
+        c.commit()
+        return {'grade':'Grade 4','score':0.0,'dias':0,'tenure':0,'next':'Grade 3','broken_vote':True,'hp':70,'ce':250,'ct':3,'threshold':70,'remaining_days':7,'attribute_growth':{'corpo':0.0,'mente':0.0,'alma':0.0}}
+    score=round((done/due)*100,1) if due else 100.0 if elapsed==0 else 0.0
+    thresholds={'Grade 4':0,'Grade 3':70,'Grade 2':75,'Grade 1':80,'Special Grade':85}
     grade=GRADE_STATS[0]
     for g,min_days,hp,ce,ct in GRADE_STATS:
-        if elapsed>=min_days and score >= ({'Grade 4':0,'Grade 3':70,'Grade 2':75,'Grade 1':80,'Special Grade':85}[g]):
-            grade=(g,min_days,hp,ce,ct)
-    idx=[x[0] for x in GRADE_STATS].index(grade[0]); nxt=GRADE_STATS[min(idx+1,len(GRADE_STATS)-1)]
-    return {'grade':grade[0],'score':score,'dias':elapsed,'tenure':elapsed,'next':nxt[0],'broken_vote':False,'hp':grade[2],'ce':grade[3],'ct':grade[4]}
+        if elapsed>=min_days and score>=thresholds[g]: grade=(g,min_days,hp,ce,ct)
+    idx=[x[0] for x in GRADE_STATS].index(grade[0])
+    nxt=GRADE_STATS[min(idx+1,len(GRADE_STATS)-1)]
+    if grade[0]=='Special Grade': nxt=None
+    remaining=max(0,(nxt[1]-elapsed)) if nxt else 0
+    threshold=None if not nxt else thresholds[nxt[0]]
+    cls=_class_consistency(c,u['id'],start,end) if start<=end else {x:{'due':0,'done':0} for x in CLASSES}
+    growth={x:round(min(10.0, (cls[x]['done']/max(1,cls[x]['due']))*10.0),1) for x in CLASSES}
+    return {'grade':grade[0],'score':score,'dias':elapsed,'tenure':elapsed,'next':nxt[0] if nxt else None,'broken_vote':False,'hp':grade[2],'ce':grade[3],'ct':grade[4],'threshold':threshold,'remaining_days':remaining,'attribute_growth':growth}
 
 def tree_payload(tree_id):
     m=TREE_META.get(tree_id)
     if not m:return None
-    return {'id':tree_id,'nome':SKILL_TREE_NAMES.get(tree_id,tree_id),'descricao':f'Técnica amaldiçoada associada a {m[0]}.','personagem':m[0],'frase':m[1],'imagem':m[2],'dominio':m[3]}
+    domain=DOMAIN_NODE_MAP.get(tree_id,m[3])
+    return {'id':tree_id,'nome':SKILL_TREE_NAMES.get(tree_id,tree_id),'descricao':f'Técnica amaldiçoada associada a {m[0]}.','personagem':m[0],'frase':m[1],'imagem':m[2],'dominio':domain}
 
 def user_payload(u):
     c=db(); process_until_yesterday(c,u)
@@ -341,7 +429,7 @@ def user_payload(u):
     prog=progression_for(c,u)
     tree_id=(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None)
     c.commit();c.close()
-    return {'usuario':u['username'],'xp':int(u['xp'] or 0),'tarefas':tasks,'streaks':s,'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name'],'skill_tree':tree_id},'votoBonus':bonus,'progresso':prog,'skill_tree':tree_payload(tree_id)}
+    return {'usuario':u['username'],'xp':int(u['xp'] or 0),'tarefas':tasks,'streaks':s,'personagem':None if not ch else {'body':base['body'],'mind':base['mind'],'soul':base['soul'],'classe':ch['class_name'],'skill_tree':tree_id,'crescimento':growth},'votoBonus':bonus,'progresso':prog,'skill_tree':tree_payload(tree_id)}
 
 @app.get('/')
 def index():return send_file(os.path.join(BASE_DIR,'index.html'))
@@ -355,7 +443,7 @@ def register():
     if len(password)<4:return jsonify(error='A senha precisa ter pelo menos 4 caracteres.'),400
     c=db()
     try:
-        uid=insert_and_get_id(c, 'INSERT INTO users(username,password_hash,last_processed_day) VALUES(?,?,?)',(username,generate_password_hash(password),iso(today()-timedelta(days=1))))
+        uid=insert_and_get_id(c, 'INSERT INTO users(username,password_hash,last_processed_day,progress_started_at) VALUES(?,?,?,?)',(username,generate_password_hash(password),iso(today()-timedelta(days=1)),iso(today())))
         for cls in CLASSES:c.execute('INSERT INTO streaks(user_id,class,days,last_day) VALUES(?,?,0,NULL)',(uid,cls))
         c.commit()
     except Exception as e:
@@ -432,7 +520,7 @@ def admin_export_sql():
     if not ok:return err
     if not DATABASE_URL:return jsonify(error='Exportação SQL administrativa está disponível para PostgreSQL.'),400
     tables=['users','characters','tasks','completions','streaks','vote_bonuses','user_skills','battles','hunts','entity_battles','pvp_daily','pvp_challenges']
-    c=db(); lines=['-- Cursed Mission PostgreSQL backup','-- Gerado pelo painel ADM','-- Importe somente em uma base do A Travessia.','','TRUNCATE TABLE '+', '.join(tables)+' CASCADE;']
+    c=db(); lines=['-- Cursed Mission PostgreSQL backup','-- Gerado pelo painel ADM','-- Importe somente em uma base do Cursed Mission.','','TRUNCATE TABLE '+', '.join(tables)+' CASCADE;']
     for table in tables:
         rows=c.execute(f'SELECT * FROM {table}').fetchall()
         if not rows:continue
@@ -444,7 +532,7 @@ def admin_export_sql():
     for table in ['users','tasks','battles','entity_battles']:
         lines.append(f"SELECT setval(pg_get_serial_sequence('{table}','id'), COALESCE(MAX(id),1), MAX(id) IS NOT NULL) FROM {table};")
     c.close(); sql='\n'.join(lines)+'\n'
-    return Response(sql,mimetype='application/sql',headers={'Content-Disposition':'attachment; filename=travessia_backup.sql'})
+    return Response(sql,mimetype='application/sql',headers={'Content-Disposition':'attachment; filename=cursed_mission_backup.sql'})
 
 @app.post('/api/admin/import-sql')
 def admin_import_sql():
@@ -527,16 +615,30 @@ def save_character():
     c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name,skill_tree) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name,skill_tree=COALESCE(characters.skill_tree,excluded.skill_tree)',(u['id'],body,mind,soul,cls,tree));c.commit();c.close();return jsonify(ok=True)
 
 def attributes_for(c,uid):
-    ch=c.execute('SELECT * FROM characters WHERE user_id=?',(uid,)).fetchone();base={'body':0.0,'mind':0.0,'soul':0.0} if not ch else {'body':float(ch['body'] or 0),'mind':float(ch['mind'] or 0),'soul':float(ch['soul'] or 0)};bonus={x:0.0 for x in CLASSES}
-    for r in c.execute('SELECT class,bonus FROM vote_bonuses WHERE user_id=?',(uid,)):bonus[r['class']]=float(r['bonus'])
-    eff={'body':base['body']+bonus['corpo'],'mind':base['mind']+bonus['mente'],'soul':base['soul']+bonus['alma']}
-    return base,bonus,eff,ch
+    ch=c.execute('SELECT * FROM characters WHERE user_id=?',(uid,)).fetchone()
+    base={'body':0.0,'mind':0.0,'soul':0.0} if not ch else {'body':float(ch['body'] or 0),'mind':float(ch['mind'] or 0),'soul':float(ch['soul'] or 0)}
+    bonus={x:0.0 for x in CLASSES}
+    for r in c.execute('SELECT class,bonus FROM vote_bonuses WHERE user_id=?',(uid,)): bonus[r['class']]=float(r['bonus'])
+    u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
+    prog=progression_for(c,u) if u else {'attribute_growth':{'corpo':0,'mente':0,'alma':0}}
+    growth=prog.get('attribute_growth',{})
+    eff={'body':base['body']+growth.get('corpo',0)+bonus['corpo'], 'mind':base['mind']+growth.get('mente',0)+bonus['mente'], 'soul':base['soul']+growth.get('alma',0)+bonus['alma']}
+    return base,bonus,eff,ch,growth
 
 def stats_for(attrs,days):
-    # Compatibilidade para chamadas antigas: a escala agora é determinada pelo grau.
     d=max(0,int(days or 0)); g='Special Grade' if d>=180 else 'Grade 1' if d>=90 else 'Grade 2' if d>=30 else 'Grade 3' if d>=7 else 'Grade 4'
     row=next(x for x in GRADE_STATS if x[0]==g)
     return {'F':{},'HP':row[2],'CE':row[3],'CT':row[4]}
+
+def combat_stats_for(c,u):
+    prog=progression_for(c,u); grade=prog['grade']; idx=[x[0] for x in GRADE_STATS].index(grade)
+    base=GRADE_STATS[idx]; nxt=GRADE_STATS[min(idx+1,len(GRADE_STATS)-1)]; growth=prog.get('attribute_growth',{})
+    body=growth.get('corpo',0)/10.0; soul=growth.get('alma',0)/10.0; mind=growth.get('mente',0)/10.0
+    hp=round(base[2]+(nxt[2]-base[2])*body,1)
+    ce=round(base[3]+(nxt[3]-base[3])*soul,1)
+    ct=base[4] if idx>=4 else min(nxt[4], base[4]+int(round((nxt[4]-base[4])*mind)))
+    if grade=='Special Grade': hp,ce,ct=200,1000,10
+    return {'HP':hp,'CE':ce,'CT':ct,'maxHP':nxt[2],'maxCE':nxt[3],'maxCT':nxt[4]}
 
 @app.get('/api/profile')
 def profile():
@@ -544,7 +646,7 @@ def profile():
     if err:return err
     c=db();process_until_yesterday(c,u);vals={x:{'dias':0,'ultimoDia':None} for x in CLASSES}
     for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):vals[r['class']]={'dias':int(r['days']),'ultimoDia':r['last_day']}
-    vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch=attributes_for(c,u['id']);prog=progression_for(c,u); stats={'HP':prog['hp'],'CE':prog['ce'],'CT':prog['ct']}; tree=tree_payload(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None);c.commit();c.close()
+    vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch,growth=attributes_for(c,u['id']);prog=progression_for(c,u); stats=combat_stats_for(c,u); tree=tree_payload(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None);c.commit();c.close()
     return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats,progresso=prog,skill_tree=tree)
 
 @app.get('/api/skills')
@@ -554,20 +656,23 @@ def skills():
     c=db(); owned={r['skill_id']:bool(r['equipped']) for r in c.execute('SELECT skill_id,equipped FROM user_skills WHERE user_id=?',(u['id'],))}
     xp=int(u['xp'] or 0); prog=progression_for(c,u); ct=prog['ct']
     ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone(); tree_id=ch['skill_tree'] if ch else None
-    meta=tree_payload(tree_id)
+    meta=tree_payload(tree_id); master=str(u['username']).upper()==MASTER_USERNAME.upper()
+    rank={'Grade 4':0,'Grade 3':1,'Grade 2':2,'Grade 1':3,'Special Grade':4}.get(prog['grade'],0)
     out=[]
-    # O catálogo antigo continua disponível para compatibilidade do combate; a
-    # interface agora apresenta a identidade da árvore e não transforma domínio em compra.
-    master=str(u.get('username','')).upper()==MASTER_USERNAME.upper()
     for sid,name,cat,skill_ct,ce,effect in SKILLS:
-        cost={1:50,2:100,3:175,4:275,5:400}[skill_ct]
-        acquired=master or sid in owned
-        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':False if master else (not acquired and skill_ct<=ct and xp>=cost),'equipada':True if master else owned.get(sid,False)})
-    power=vote_power_multiplier(c,u['id'])
+        tree=SKILL_TREE_BY_ID.get(sid); cost={1:50,2:100,3:175,4:275}[skill_ct]
+        prereq=SKILL_PREREQS.get(sid,[]); acquired=master or sid in owned
+        same=tree==tree_id
+        prereq_ok=all(pid in owned or master for pid in prereq)
+        can=master or (same and not acquired and skill_ct<=ct and xp>=cost and prereq_ok)
+        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':can,'equipada':owned.get(sid,False),'mesma_arvore':same,'arvore':tree,'prerequisitos':prereq,'tipo':'normal'})
     domains=[]
-    if meta and meta['dominio']!='—':
-        unlocked=prog['grade'] in ('Grade 1','Special Grade')
-        domains=[{'nome':meta['dominio'],'efeito':'Nó final da sua Skill Tree. Não é comprado com XP.','requisito':'Grade 1 + domínio das técnicas anteriores','desbloqueada':unlocked}]
+    if tree_id and tree_id in DOMAIN_NODE_MAP:
+        tree_skills=[x[0] for x in SKILL_DATA if x[6]==tree_id]
+        all_mastered=all(x in owned or master for x in tree_skills)
+        unlocked=(rank>=3 and all_mastered)
+        domains=[{'nome':DOMAIN_NODE_MAP[tree_id],'efeito':'Nó final da Skill Tree. Não é comprado com XP.','requisito':'Grade 1 + todas as técnicas da árvore dominadas','desbloqueada':unlocked,'progresso_tecnicas':sum(1 for x in tree_skills if x in owned or master),'total_tecnicas':len(tree_skills)}]
+    power=vote_power_multiplier(c,u['id'])
     c.close();return jsonify(skills=out,xp=xp,ct=ct,skill_tree=tree_id,skill_tree_nome=meta['nome'] if meta else None,skill_tree_descricao=(SKILL_TREE_OPTIONS_TEXT.get(tree_id) if tree_id else None),tree_meta=meta,progresso=prog,domains=domains,poder_voto=power)
 
 @app.post('/api/skills/<skill_id>/buy')
@@ -575,41 +680,42 @@ def buy_skill(skill_id):
     u,err=require_user()
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
-    if not item:return jsonify(error='Skill não encontrada.'),404
-    cost={1:50,2:100,3:175,4:275,5:400}[item[3]]
-    c=db();
-    if c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone(): c.close();return jsonify(error='Você já possui essa skill.'),400
-    if item[3]>current_ct(c,u['id']): c.close();return jsonify(error='CT insuficiente para comprar essa skill.'),400
-    if int(u['xp'] or 0)<cost: c.close();return jsonify(error='XP insuficiente.'),400
-    c.execute('UPDATE users SET xp=xp-? WHERE id=?',(cost,u['id']))
-    c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0)',(u['id'],skill_id));c.commit();c.close();return jsonify(ok=True,xp_gasto=cost)
+    if not item:return jsonify(error='Técnica não encontrada.'),404
+    tree=SKILL_TREE_BY_ID.get(skill_id); cost={1:50,2:100,3:175,4:275}[item[3]]; c=db()
+    if str(u['username']).upper()==MASTER_USERNAME.upper():
+        c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0) ON CONFLICT(user_id,skill_id) DO NOTHING',(u['id'],skill_id));c.commit();c.close();return jsonify(ok=True,master=True)
+    ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone(); tree_id=ch['skill_tree'] if ch else None
+    if tree!=tree_id:c.close();return jsonify(error='Essa técnica pertence a outra Skill Tree.'),400
+    if c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone(): c.close();return jsonify(error='Você já possui essa técnica.'),400
+    if item[3]>current_ct(c,u['id']): c.close();return jsonify(error='CT insuficiente para desbloquear essa técnica.'),400
+    if int(u['xp'] or 0)<cost:c.close();return jsonify(error='XP insuficiente.'),400
+    missing=[next(x for x in SKILLS if x[0]==pid)[1] for pid in SKILL_PREREQS.get(skill_id,[]) if not c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],pid)).fetchone()]
+    if missing:c.close();return jsonify(error='Pré-requisitos faltando: '+', '.join(missing)),400
+    c.execute('UPDATE users SET xp=xp-? WHERE id=?',(cost,u['id']));c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0)',(u['id'],skill_id));c.commit();c.close();return jsonify(ok=True,xp_gasto=cost)
 
 @app.post('/api/skills/<skill_id>/toggle')
 def toggle_skill(skill_id):
     u,err=require_user()
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
-    if not item:return jsonify(error='Skill não encontrada.'),404
-    if str(u.get('username','')).upper()==MASTER_USERNAME.upper():
-        return jsonify(ok=True,equipadas=[x[0] for x in SKILLS])
+    if not item:return jsonify(error='Técnica não encontrada.'),404
     c=db();row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
-    if not row:c.close();return jsonify(error='Compre essa skill primeiro.'),400
-    c.execute('UPDATE user_skills SET equipped=? WHERE user_id=? AND skill_id=?',(0 if row['equipped'] else 1,u['id'],skill_id))
-    # CT cap
+    if not row:c.close();return jsonify(error='Desbloqueie essa técnica primeiro.'),400
+    newv=0 if row['equipped'] else 1
+    c.execute('UPDATE user_skills SET equipped=? WHERE user_id=? AND skill_id=?',(newv,u['id'],skill_id))
     total=sum(next(x[3] for x in SKILLS if x[0]==r['skill_id']) for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],)))
-    c.rollback() if total>current_ct(c,u['id']) else c.commit()
-    if total>current_ct(c,u['id']):c.close();return jsonify(error='Você não possui CT suficiente para equipar essa combinação.'),400
-    equipped=[r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],))];c.close();return jsonify(ok=True,equipadas=equipped)
+    if total>current_ct(c,u['id']):c.rollback();c.close();return jsonify(error='Você não possui CT suficiente para equipar essa combinação.'),400
+    c.commit();equipped=[r['skill_id'] for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],))];c.close();return jsonify(ok=True,equipadas=equipped)
 
 def vote_power_multiplier(c,uid):
     # Cada voto vinculativo ativo aumenta o poder de combate em 10%.
     n=int(c.execute('SELECT COUNT(*) AS n FROM vote_bonuses WHERE user_id=?',(uid,)).fetchone()['n'] or 0)
-    return 1.0 + 0.10*n
+    return 1.0 + 0.10*min(n,3)
 
 def current_ct(c,uid):
     u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
     if not u:return 3
-    if str(u.get('username','')).upper()==MASTER_USERNAME.upper(): return 999
+    if str(u['username']).upper()==MASTER_USERNAME.upper(): return 10
     return progression_for(c,u)['ct']
 
 @app.get('/api/leaderboard')
@@ -628,9 +734,8 @@ def skill_dict(skill_id):
     return {'id':x[0],'nome':x[1],'categoria':x[2],'ct':x[3],'ce':x[4],'efeito':(f'Dano = {x[3]} + '+x[5].replace(' de dano.','').replace(' de dano','') if x[2]=='elementar' and 'dano' in x[5].lower() else x[5])}
 
 def battle_stats(c,uid):
-    base,bonus,eff,ch=attributes_for(c,uid)
-    days=max([int(r['days']) for r in c.execute('SELECT days FROM streaks WHERE user_id=?',(uid,))] or [1])
-    return stats_for(eff,days)
+    u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
+    return combat_stats_for(c,u)
 
 @app.get('/api/entities')
 def entities():
@@ -680,7 +785,7 @@ def start_entity_battle():
     # iniciada novamente, independentemente de vitória ou derrota.
     valid.pop(idx)
     c.execute('UPDATE hunts SET entities_json=? WHERE user_id=? AND day=?',(json.dumps(valid,ensure_ascii=False),u['id'],iso(today())))
-    base,bonus,eff,ch=attributes_for(c,u['id']); days=max([int(r['days']) for r in c.execute('SELECT days FROM streaks WHERE user_id=?',(u['id'],))] or [1]); st=stats_for(eff,days)
+    st=combat_stats_for(c,u)
     bid=insert_and_get_id(c, 'INSERT INTO entity_battles(user_id,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json) VALUES(?,?,?,?,?,?,?,?)',(u['id'],json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([])));c.commit();c.close();return jsonify(id=bid)
 
 @app.get('/api/entity-battles/<int:bid>')
