@@ -12,6 +12,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get('DATABASE_PATH', os.path.join(BASE_DIR, 'travessia.db'))
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '1984')
+MASTER_USERNAME = '__ADMIN_MASTER__'
 if not DATABASE_URL:
     os.makedirs(os.path.dirname(DB_PATH) or BASE_DIR, exist_ok=True)
 
@@ -222,6 +223,19 @@ def current_user():
     if not uid:return None
     c=db(); u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone(); c.close(); return u
 
+def ensure_master_player(c):
+    row=c.execute('SELECT * FROM users WHERE username=?',(MASTER_USERNAME,)).fetchone()
+    if not row:
+        uid=insert_and_get_id(c,'INSERT INTO users(username,password_hash,xp) VALUES(?,?,?)',(MASTER_USERNAME,generate_password_hash(secrets.token_hex(24)),180))
+    else:
+        uid=row['id']; c.execute('UPDATE users SET xp=180 WHERE id=?',(uid,))
+    c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name,skill_tree) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name,skill_tree=excluded.skill_tree',(uid,100.0,100.0,100.0,'Special Grade','shrine'))
+    for sid,*_ in SKILLS:
+        c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,1) ON CONFLICT(user_id,skill_id) DO UPDATE SET equipped=1',(uid,sid))
+    for cls in CLASSES:
+        c.execute('INSERT INTO streaks(user_id,class,days,last_day) VALUES(?,?,180,?) ON CONFLICT(user_id,class) DO UPDATE SET days=180,last_day=excluded.last_day',(uid,cls,iso(today())))
+    return uid
+
 def require_user():
     u=current_user(); return (u,None) if u else (None,(jsonify(error='Faça login para continuar.'),401))
 
@@ -277,6 +291,8 @@ def _created_date(u):
     except Exception:return today()
 
 def progression_for(c,u):
+    if str(u.get('username','')).upper()==MASTER_USERNAME.upper():
+        return {'grade':'Special Grade','score':100.0,'dias':180,'tenure':180,'next':None,'broken_vote':False,'hp':200,'ce':1000,'ct':999}
     created=_created_date(u); elapsed=max(0,(today()-created).days)
     tasks=get_tasks(c,u['id'])
     # Consistência = compromissos realmente assumidos e cumpridos; dias sem
@@ -353,7 +369,8 @@ def login():
     d=request.get_json(silent=True) or {}; username=str(d.get('usuario','')).strip(); password=str(d.get('senha',''))
     # Acesso administrativo separado da tabela de jogadores.
     if username.upper()=='ADMIN' and password==ADMIN_PASSWORD:
-        session.clear();session['admin']=True;session.permanent=True
+        c=db(); uid=ensure_master_player(c); c.commit(); c.close()
+        session.clear();session['admin']=True;session['user_id']=uid;session.permanent=True
         return jsonify(ok=True,usuario='ADMIN',admin=True)
     c=db();u=c.execute('SELECT * FROM users WHERE LOWER(username)=LOWER(?)',(username,)).fetchone();c.close()
     if not u or not check_password_hash(u['password_hash'],password):return jsonify(error='Usuário ou senha incorretos.'),401
@@ -390,7 +407,15 @@ def admin_users():
     cycles=(elapsed//30)+1 if elapsed>=0 else 0
     next_backup=base+timedelta(days=30*cycles)
     return jsonify({'usuarios':[{'id':r['id'],'usuario':r['username'],'criado_em':str(r['created_at']),'xp':int(r['xp'] or 0)} for r in rows],
-                    'backup':{'inicio':'2026-09-05','proximo':iso(next_backup),'ciclo_dias':30,'atrasado':today_local>=next_backup}})
+                    'backup':{'inicio':'2026-09-05','proximo':iso(next_backup),'ciclo_dias':30,'atrasado':today_local>next_backup,'vence_hoje':today_local==next_backup}})
+
+@app.post('/api/admin/play')
+def admin_play():
+    ok,err=require_admin()
+    if not ok:return err
+    c=db(); uid=ensure_master_player(c); c.commit(); c.close()
+    session['admin']=True; session['user_id']=uid; session.permanent=True
+    return jsonify(ok=True,usuario='ADMIN',modo='master')
 
 @app.delete('/api/admin/users/<int:uid>')
 def admin_delete_user_route(uid):
@@ -398,7 +423,7 @@ def admin_delete_user_route(uid):
     if not ok:return err
     c=db(); row=c.execute('SELECT username FROM users WHERE id=?',(uid,)).fetchone()
     if not row:c.close();return jsonify(error='Usuário não encontrado.'),404
-    if str(row['username']).upper()=='ADMIN':c.close();return jsonify(error='A conta ADMIN não pode ser apagada.'),400
+    if str(row['username']).upper() in ('ADMIN',MASTER_USERNAME.upper()):c.close();return jsonify(error='A conta ADMIN não pode ser apagada.'),400
     admin_delete_user(c,uid);c.commit();c.close();return jsonify(ok=True)
 
 @app.get('/api/admin/export-sql')
@@ -406,7 +431,7 @@ def admin_export_sql():
     ok,err=require_admin()
     if not ok:return err
     if not DATABASE_URL:return jsonify(error='Exportação SQL administrativa está disponível para PostgreSQL.'),400
-    tables=['users','characters','tasks','completions','streaks','vote_bonuses','user_skills','battles','hunts','entity_battles','pvp_daily']
+    tables=['users','characters','tasks','completions','streaks','vote_bonuses','user_skills','battles','hunts','entity_battles','pvp_daily','pvp_challenges']
     c=db(); lines=['-- Cursed Mission PostgreSQL backup','-- Gerado pelo painel ADM','-- Importe somente em uma base do A Travessia.','','TRUNCATE TABLE '+', '.join(tables)+' CASCADE;']
     for table in tables:
         rows=c.execute(f'SELECT * FROM {table}').fetchall()
@@ -533,10 +558,11 @@ def skills():
     out=[]
     # O catálogo antigo continua disponível para compatibilidade do combate; a
     # interface agora apresenta a identidade da árvore e não transforma domínio em compra.
+    master=str(u.get('username','')).upper()==MASTER_USERNAME.upper()
     for sid,name,cat,skill_ct,ce,effect in SKILLS:
         cost={1:50,2:100,3:175,4:275,5:400}[skill_ct]
-        acquired=sid in owned
-        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':(not acquired and skill_ct<=ct and xp>=cost),'equipada':owned.get(sid,False)})
+        acquired=master or sid in owned
+        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':False if master else (not acquired and skill_ct<=ct and xp>=cost),'equipada':True if master else owned.get(sid,False)})
     power=vote_power_multiplier(c,u['id'])
     domains=[]
     if meta and meta['dominio']!='—':
@@ -564,6 +590,8 @@ def toggle_skill(skill_id):
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Skill não encontrada.'),404
+    if str(u.get('username','')).upper()==MASTER_USERNAME.upper():
+        return jsonify(ok=True,equipadas=[x[0] for x in SKILLS])
     c=db();row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
     if not row:c.close();return jsonify(error='Compre essa skill primeiro.'),400
     c.execute('UPDATE user_skills SET equipped=? WHERE user_id=? AND skill_id=?',(0 if row['equipped'] else 1,u['id'],skill_id))
@@ -581,6 +609,7 @@ def vote_power_multiplier(c,uid):
 def current_ct(c,uid):
     u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
     if not u:return 3
+    if str(u.get('username','')).upper()==MASTER_USERNAME.upper(): return 999
     return progression_for(c,u)['ct']
 
 @app.get('/api/leaderboard')
