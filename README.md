@@ -53,3 +53,19 @@ O painel ADM permite:
 O PostgreSQL Free do Render expira após 30 dias. Por isso, use o painel ADM para baixar regularmente o arquivo `travessia_backup.sql` e guardá-lo fora do Render. O próprio Render informa que o Postgres Free não possui backups gerenciados; backups externos com `pg_dump` são outra opção. O painel do jogo fornece uma exportação SQL dos dados usados pelo A Travessia.
 
 Para restaurar, entre como `ADMIN`, escolha o arquivo `.sql` e confirme. A restauração substitui os dados atuais das tabelas do jogo.
+
+
+## Alterações recentes — 07/09/2026
+
+### PvP por desafio
+- Criar um PvP agora apenas envia um desafio ao segundo jogador.
+- O desafiado pode **ACEITAR** ou **RECUSAR**.
+- O combate só fica ativo após a aceitação.
+- Ao aceitar, o primeiro turno é sorteado com **50/50** entre os dois jogadores.
+- O limite diário de 2 combates PvP passa a ser contabilizado quando o desafio é aceito, e não quando é enviado.
+
+### Imagens
+As quatro imagens incorporadas na página de atributos/personagem foram substituídas por arquivos da **Jujutsu Kaisen Wiki**: Toji Fushiguro, Satoru Gojo, Yuta Okkotsu e Yuji Itadori.
+
+### Lembrete de backup
+O painel ADMIN possui um lembrete de backup SQL em ciclos de 30 dias a partir de **05/09/2026**. O próximo vencimento após essa data é calculado automaticamente pelo servidor e mostrado no painel administrativo.
