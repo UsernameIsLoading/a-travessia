@@ -712,7 +712,7 @@ def change_skill_tree():
         if not master and int(u['xp'] or 0)<cost:
             c.close(); return jsonify(error='Você precisa de 200 XP para trocar de Skill Tree.'),400
         if not master: c.execute('UPDATE users SET xp=xp-? WHERE id=?',(cost,u['id']))
-        c.execute('DELETE FROM user_skills WHERE user_id=?',(u['id'],))
+        c.execute("DELETE FROM user_skills WHERE user_id=? AND skill_id NOT IN ('enhanced-attack','reverse-energy')",(u['id'],))
         c.execute('UPDATE characters SET skill_tree=? WHERE user_id=?',(new_tree,u['id']))
         c.commit(); c.close()
         return jsonify(ok=True,skill_tree=new_tree,xp_gasto=0 if master else cost,skills_perdidas=True)

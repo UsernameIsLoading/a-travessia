@@ -1473,7 +1473,7 @@ async function abrirSkills(){
     const cats={ofensiva:'⚔️ OFENSIVAS',espacial:'🌀 ESPACIAIS',defensiva:'🛡️ DEFENSIVAS',controle:'⛓️ CONTROLE',alma:'👁️ ALMA',invocacao:'🐺 INVOCAÇÕES',reforco:'✨ REFORÇOS',versatil:'🔄 VERSÁTEIS',especial:'🧿 ESPECIAIS',anulacao:'🚫 ANULAÇÃO',maxima:'💥 TÉCNICAS MÁXIMAS',reversa:'🔁 TÉCNICAS REVERSAS',equipamento:'🎒 EQUIPAMENTOS ESPECIAIS'};
     const m=data.tree_meta;
     const path=`<div class="grade-path">${['Grade 4','Grade 3','Grade 2','Grade 1','Special Grade'].map(g=>`<span class="grade-node ${data.progresso&&data.progresso.grade===g?'active':''}">${g}</span>`).join('')}</div>`;
-    const treeBanner=data.skill_tree?`<div class="skill-card tree-banner"><img src="${m?.imagem||''}" alt="${escaparXml(m?.personagem||data.skill_tree_nome||'')}" onerror="this.style.display='none'"><div><div class="skill-tree-badge">🌳 ${escaparXml(data.skill_tree_nome)}</div><h2>${escaparXml(m?.personagem||'')}</h2><p class="tree-quote">“${escaparXml(m?.frase||'')}”</p><p><b>Regra:</b> uma única árvore por vez. Trocar custa <b>200 XP</b> e apaga todas as skills desbloqueadas anteriormente.</p>${path}<div style="margin-top:12px"><button class="main-btn red-btn" onclick="mudarSkillTree()">🔄 TROCAR SKILL TREE — 200 XP</button></div></div></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a progressão.</p></div>`;
+    const treeBanner=data.skill_tree?`<div class="skill-card tree-banner"><img src="${m?.imagem||''}" alt="${escaparXml(m?.personagem||data.skill_tree_nome||'')}" onerror="this.style.display='none'"><div><div class="skill-tree-badge">🌳 ${escaparXml(data.skill_tree_nome)}</div><h2>${escaparXml(m?.personagem||'')}</h2><p class="tree-quote">“${escaparXml(m?.frase||'')}”</p><p><b>Regra:</b> uma única árvore por vez. Trocar custa <b>200 XP</b> e apaga as skills da árvore anterior; as Técnicas Universais permanecem.</p>${path}<div style="margin-top:12px"><button class="main-btn red-btn" onclick="mudarSkillTree()">🔄 TROCAR SKILL TREE — 200 XP</button></div></div></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a progressão.</p></div>`;
     const grupos=Object.entries(cats).map(([cat,title])=>{
       const items=data.skills.filter(x=>x.categoria===cat && x.tipo!=='domain' && !x.adquirida && x.mesma_arvore);
       if(!items.length)return '';
@@ -1494,11 +1494,11 @@ async function mudarSkillTree(){
   const disponiveis=entries.filter(([id])=>id!==atual);
   if(!disponiveis.length){alert('Não há outra Skill Tree disponível.');return;}
   const lista=disponiveis.map(([id,v],i)=>`${i+1}. ${v[0]}`).join('\n');
-  const escolha=prompt(`Trocar Skill Tree custa 200 XP e apaga TODAS as skills atuais, incluindo as universais.\n\nEscolha uma nova árvore:\n${lista}\n\nDigite o número:`);
+  const escolha=prompt(`Trocar Skill Tree custa 200 XP e apaga TODAS as skills atuais, exceto as Técnicas Universais (Energia Reversa e Ataque Aprimorado).\n\nEscolha uma nova árvore:\n${lista}\n\nDigite o número:`);
   if(escolha===null)return;
   const n=Number(escolha); if(!Number.isInteger(n)||n<1||n>disponiveis.length){alert('Escolha inválida.');return;}
   const [treeId,treeInfo]=disponiveis[n-1];
-  if(!confirm(`Trocar para ${treeInfo[0]} por 200 XP?\n\nTodas as suas skills atuais serão perdidas e precisarão ser desbloqueadas novamente.`))return;
+  if(!confirm(`Trocar para ${treeInfo[0]} por 200 XP?\n\nAs skills da árvore atual serão perdidas. Energia Reversa e Ataque Aprimorado permanecem disponíveis.`))return;
   try{
     const r=await api('/api/skill-tree/change',{method:'POST',body:JSON.stringify({tree_id:treeId})});
     alert(`Skill Tree alterada para ${treeInfo[0]}. ${r.xp_gasto||0} XP gasto. Suas skills anteriores foram removidas.`);
