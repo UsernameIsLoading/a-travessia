@@ -71,6 +71,8 @@ TREE_META = {
  'antigravity': ('Kenjaku','A evolução humana é fascinante.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Kenjaku.png','Womb Profusion'),
  'light': ('Miguel','Eu não tenho tempo para isso.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Miguel.png','—'),
  'yuji': ('Yuji Itadori','Eu sou só um feiticeiro.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Yuji%20Itadori%20%28Anime%29.png','Domain Expansion'),
+ 'hakari': ('Kinji Hakari','Estou no auge.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Kinji%20Hakari.png','Idle Death Gamble'),
+ 'toji': ('Toji Fushiguro','Dentre os céus e a terra, eu sou o honrado.','https://jujutsu-kaisen.fandom.com/wiki/Special:Redirect/file/Toji%20Fushiguro%20%28Anime%29.png','—'),
 }
 DOMAIN_ONLY = {'smallpox','deadly-sentencing','idle-death-gamble','womb-profusion','threefold-affliction','authentic-mutual-love','hanami-domain','dabura-domain','yuji-domain'}
 SKILL_TREE_NAMES = {k:v[0] for k,v in TREE_META.items()}
@@ -84,7 +86,7 @@ DOMAIN_NODE_MAP = {
  'shrine':'Malevolent Shrine','limitless':'Unlimited Void','ten-shadows':'Chimera Shadow Garden',
  'cursed-spirit-manipulation':'—','idle-transfiguration':'Self-Embodiment of Perfection','copy':'Authentic Mutual Love',
  'construction':'Threefold Affliction','technique-extinguishment':'—','disaster-flames':'Coffin of the Iron Mountain',
- 'disaster-tides':'Horizon of the Captivating Skandha','antigravity':'Womb Profusion','deadly-sentencing':'Deadly Sentencing',
+ 'disaster-tides':'Horizon of the Captivating Skandha','antigravity':'Womb Profusion','hakari':'Idle Death Gamble','deadly-sentencing':'Deadly Sentencing',
  'idle-death-gamble':'Idle Death Gamble','hanami-domain':'Hanami Domain','dabura-domain':'Dabura Domain','yuji-domain':'Yuji Domain'
 }
 
@@ -144,6 +146,17 @@ SKILL_DATA = [
 ('prayer-song','Prayer Song','reforco',2,20,'Aprimora o usuário por meio de um cântico.','prayer-song'),
 ('antigravity','Antigravity System','defensiva',3,80,'Manipula a gravidade para reduzir dano e controlar o campo.','antigravity'),
 ('black-flash','Black Flash','ofensiva',3,80,'Golpe de energia precisa; dano alto e grande chance de crítico.','yuji'),
+('hakari-private-pure-love-train','Private Pure Love Train','reforco',2,20,'Técnica de suporte associada ao domínio de Hakari.','hakari'),
+('enhanced-attack','Ataque Aprimorado','especial',0,0,'Gasta 100 CE por +1 de dano constante durante o combate. Informe um número inteiro.','universal'),
+('reverse-energy','Energia Reversa','reversa',0,0,'Gasta 20 CE por 1 HP recuperado. Informe um número inteiro.','universal'),
+# Equipamentos especiais do Toji: nós abstratos de progressão do RPG.
+# Eles não consomem CT nem CE e concedem efeitos passivos de jogo.
+('toji-equip-1','Equipamento — Lâmina da Alma','equipamento',0,0,'Passivo: +1 de dano em ataques físicos.','toji'),
+('toji-equip-2','Equipamento — Corrente Infinita','equipamento',0,0,'Passivo: a primeira penalidade de precisão sofrida em cada combate é ignorada.','toji'),
+('toji-equip-3','Equipamento — Lança de Anulação','equipamento',0,0,'Passivo: uma vez por combate, reduz pela metade o dano de uma técnica recebida.','toji'),
+('toji-equip-4','Equipamento — Bastão de Combate','equipamento',0,0,'Passivo: recebe +10 HP máximo dentro da escala do personagem.','toji'),
+('toji-equip-5','Equipamento — Inventário Amaldiçoado','equipamento',0,0,'Passivo: reduz em 1 a chance abstrata de sofrer efeitos de controle.','toji'),
+('toji-equip-6','Equipamento — Arsenal Completo','equipamento',0,0,'Nó final: libera o conjunto completo de equipamentos especiais do Toji para o RPG.','toji'),
 ]
 SKILLS = [(a,b,c,d,e,f) for a,b,c,d,e,f,_ in SKILL_DATA]
 SKILL_TREE_BY_ID = {x[0]:x[6] for x in SKILL_DATA}
@@ -152,6 +165,7 @@ SKILL_PREREQS = {
  'red':['blue'],'hollow-purple':['blue','red'],'mahoraga':['divine-dogs','nue','max-elephant','rabbit-escape','piercing-ox'],
  'uzumaki':['curse-command'],'hairpin':['resonance'],'supernova':['piercing-blood'],
  'meteor':['ember-insects'],'maximum-ice':['ice-formation'],'jacobs-ladder':['copy'],
+ 'toji-equip-2':['toji-equip-1'],'toji-equip-3':['toji-equip-2'],'toji-equip-4':['toji-equip-3'],'toji-equip-5':['toji-equip-4'],'toji-equip-6':['toji-equip-5'],
 }
 # Trees that can be chosen by players. Domain-only nodes are intentionally absent.
 SELECTABLE_TREES = [k for k in TREE_META if k not in DOMAIN_ONLY]
@@ -244,14 +258,16 @@ def init_db():
         CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS vote_bonuses(user_id INTEGER NOT NULL,class TEXT NOT NULL,bonus DOUBLE PRECISION NOT NULL DEFAULT 0.5,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-        CREATE TABLE IF NOT EXISTS battles(id SERIAL PRIMARY KEY,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 DOUBLE PRECISION,ce1 DOUBLE PRECISION,hp2 DOUBLE PRECISION,ce2 DOUBLE PRECISION,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
+        CREATE TABLE IF NOT EXISTS battles(id SERIAL PRIMARY KEY,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 DOUBLE PRECISION,ce1 DOUBLE PRECISION,hp2 DOUBLE PRECISION,ce2 DOUBLE PRECISION,log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-        CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
         c.execute('ALTER TABLE characters ADD COLUMN IF NOT EXISTS skill_tree TEXT')
         c.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS progress_started_at TEXT')
         c.execute("UPDATE users SET progress_started_at=COALESCE(progress_started_at, TO_CHAR(created_at, 'YYYY-MM-DD')) WHERE progress_started_at IS NULL")
+        c.execute("ALTER TABLE battles ADD COLUMN IF NOT EXISTS state_json TEXT NOT NULL DEFAULT '{}'")
+        c.execute("ALTER TABLE entity_battles ADD COLUMN IF NOT EXISTS state_json TEXT NOT NULL DEFAULT '{}'")
     else:
         c.executescript('''
         CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0,progress_started_at TEXT);
@@ -261,9 +277,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS streaks(user_id INTEGER NOT NULL,class TEXT NOT NULL,days INTEGER NOT NULL DEFAULT 0,last_day TEXT,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS vote_bonuses(user_id INTEGER NOT NULL,class TEXT NOT NULL,bonus REAL NOT NULL DEFAULT 0.5,PRIMARY KEY(user_id,class),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-        CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
+        CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-        CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
         cols=[r['name'] for r in c.execute('PRAGMA table_info(tasks)')]
@@ -272,6 +288,10 @@ def init_db():
         if 'last_processed_day' not in cols: c.execute('ALTER TABLE users ADD COLUMN last_processed_day TEXT')
         if 'progress_started_at' not in cols: c.execute('ALTER TABLE users ADD COLUMN progress_started_at TEXT')
         c.execute("UPDATE users SET progress_started_at=COALESCE(progress_started_at, substr(created_at,1,10)) WHERE progress_started_at IS NULL")
+        cols=[r['name'] for r in c.execute('PRAGMA table_info(battles)')]
+        if 'state_json' not in cols: c.execute("ALTER TABLE battles ADD COLUMN state_json TEXT NOT NULL DEFAULT '{}'")
+        cols=[r['name'] for r in c.execute('PRAGMA table_info(entity_battles)')]
+        if 'state_json' not in cols: c.execute("ALTER TABLE entity_battles ADD COLUMN state_json TEXT NOT NULL DEFAULT '{}'")
         for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
             c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
     ensure_pvp_challenges(c)
@@ -698,6 +718,8 @@ def combat_stats_for(c,u):
     hp=round(hp*vm,1)
     ce=round(ce*vm,1)
     ct=min(10, int(__import__('math').ceil(ct*vm)))
+    if get_character_tree(c,u['id'])=='toji':
+        ce=0.0; ct=0
     return {'HP':hp,'CE':ce,'CT':ct,'maxHP':round(nxt[2]*vm,1),'maxCE':round(nxt[3]*vm,1),'maxCT':min(10,int(__import__('math').ceil(nxt[4]*vm))),'votoMultiplicador':vm}
 
 @app.get('/api/profile')
@@ -708,6 +730,14 @@ def profile():
     for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):vals[r['class']]={'dias':int(r['days']),'ultimoDia':r['last_day']}
     vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch,growth=attributes_for(c,u['id']);prog=progression_for(c,u); stats=combat_stats_for(c,u); tree=tree_payload(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None);c.commit();c.close()
     return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats,progresso=prog,skill_tree=tree)
+
+def skill_xp_cost(item):
+    sid=item[0]; skill_ct=item[3]
+    if sid=='enhanced-attack': return 50
+    if sid=='reverse-energy': return 100
+    if item[6]=='toji':
+        return {'toji-equip-1':75,'toji-equip-2':100,'toji-equip-3':125,'toji-equip-4':150,'toji-equip-5':200,'toji-equip-6':300}.get(sid,100)
+    return {1:50,2:100,3:175,4:275}.get(skill_ct,50)
 
 @app.get('/api/skills')
 def skills():
@@ -720,12 +750,12 @@ def skills():
     rank={'Grade 4':0,'Grade 3':1,'Grade 2':2,'Grade 1':3,'Special Grade':4}.get(prog['grade'],0)
     out=[]
     for sid,name,cat,skill_ct,ce,effect in SKILLS:
-        tree=SKILL_TREE_BY_ID.get(sid); cost={1:50,2:100,3:175,4:275}[skill_ct]
+        tree=SKILL_TREE_BY_ID.get(sid); cost=skill_xp_cost((sid,name,cat,skill_ct,ce,effect,tree))
         prereq=SKILL_PREREQS.get(sid,[]); acquired=master or sid in owned
-        same=tree==tree_id
+        same=(tree==tree_id or tree=='universal')
         prereq_ok=all(pid in owned or master for pid in prereq)
         can=master or (same and not acquired and skill_ct<=ct and xp>=cost and prereq_ok)
-        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':can,'equipada':owned.get(sid,False),'mesma_arvore':same,'arvore':tree,'prerequisitos':prereq,'tipo':'normal'})
+        out.append({'id':sid,'nome':name,'categoria':cat,'ct':skill_ct,'ce':ce,'efeito':skill_dict(sid)['efeito'],'preco_xp':cost,'adquirida':acquired,'pode_comprar':can,'equipada':owned.get(sid,False),'mesma_arvore':same,'arvore':tree,'prerequisitos':prereq,'tipo':('equipment' if tree=='toji' else 'normal')})
     domains=[]
     if tree_id and tree_id in DOMAIN_NODE_MAP:
         tree_skills=[x[0] for x in SKILL_DATA if x[6]==tree_id]
@@ -741,11 +771,11 @@ def buy_skill(skill_id):
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Técnica não encontrada.'),404
-    tree=SKILL_TREE_BY_ID.get(skill_id); cost={1:50,2:100,3:175,4:275}[item[3]]; c=db()
+    tree=SKILL_TREE_BY_ID.get(skill_id); cost=skill_xp_cost(item); c=db()
     if str(u['username']).upper()==MASTER_USERNAME.upper():
         c.execute('INSERT INTO user_skills(user_id,skill_id,equipped) VALUES(?,?,0) ON CONFLICT(user_id,skill_id) DO NOTHING',(u['id'],skill_id));c.commit();c.close();return jsonify(ok=True,master=True)
     ch=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(u['id'],)).fetchone(); tree_id=ch['skill_tree'] if ch else None
-    if tree!=tree_id:c.close();return jsonify(error='Essa técnica pertence a outra Skill Tree.'),400
+    if tree!='universal' and tree!=tree_id:c.close();return jsonify(error='Essa técnica pertence a outra Skill Tree.'),400
     if c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone(): c.close();return jsonify(error='Você já possui essa técnica.'),400
     if item[3]>current_ct(c,u['id']): c.close();return jsonify(error='CT insuficiente para desbloquear essa técnica.'),400
     if int(u['xp'] or 0)<cost:c.close();return jsonify(error='XP insuficiente.'),400
@@ -759,6 +789,7 @@ def toggle_skill(skill_id):
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Técnica não encontrada.'),404
+    if item[6]=='toji': return jsonify(error='Equipamentos especiais são nós passivos da Skill Tree e não ocupam CT.') ,400
     c=db()
     master=str(u['username']).upper()==MASTER_USERNAME.upper()
     row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
@@ -793,10 +824,13 @@ def current_ct(c,uid):
 @app.get('/api/leaderboard')
 def leaderboard():
     c=db();result=[]
-    for u in c.execute('SELECT * FROM users ORDER BY username'):
+    users=c.execute('SELECT * FROM users ORDER BY username').fetchall()
+    for u in users:
         process_until_yesterday(c,u);vals={x:{'dias':0} for x in CLASSES}
-        for r in c.execute('SELECT class,days FROM streaks WHERE user_id=?',(u['id'],)):vals[r['class']]={'dias':int(r['days'])}
-        vals=current_day_streaks(c,u['id'],vals);a=[int(vals[x]['dias']) for x in CLASSES];result.append({'usuario':u['username'],'corpo':a[0],'mente':a[1],'alma':a[2],'total':sum(a)})
+        rows=c.execute('SELECT class,days FROM streaks WHERE user_id=?',(u['id'],)).fetchall()
+        for r in rows: vals[r['class']]={'dias':int(r['days'] or 0)}
+        vals=current_day_streaks(c,u['id'],vals);a=[int(vals[x]['dias']) for x in CLASSES];prog=progression_for(c,u)
+        result.append({'usuario':u['username'],'corpo':a[0],'mente':a[1],'alma':a[2],'total':sum(a),'grau':prog['grade'],'consistencia':prog['score'],'dias':prog['dias']})
     c.commit();c.close();result.sort(key=lambda x:(-x['total'],-max(x['corpo'],x['mente'],x['alma']),x['usuario'].lower()));return jsonify(result)
 
 
@@ -804,6 +838,39 @@ def skill_dict(skill_id):
     x=next((x for x in SKILLS if x[0]==skill_id),None)
     if not x:return None
     return {'id':x[0],'nome':x[1],'categoria':x[2],'ct':x[3],'ce':x[4],'efeito':(f'Dano = {x[3]} + '+x[5].replace(' de dano.','').replace(' de dano','') if x[2]=='elementar' and 'dano' in x[5].lower() else x[5])}
+
+def character_tree(c,uid):
+    r=c.execute('SELECT skill_tree FROM characters WHERE user_id=?',(uid,)).fetchone()
+    return r['skill_tree'] if r else None
+
+def domain_unlocked(c,uid):
+    u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
+    if not u:return False
+    prog=progression_for(c,u)
+    tree=character_tree(c,uid)
+    if prog['grade'] not in ('Grade 1','Special Grade') or tree not in DOMAIN_NODE_MAP:return False
+    ids=[x[0] for x in SKILL_DATA if x[6]==tree]
+    return all(c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=?',(uid,sid)).fetchone() or str(u['username']).upper()==MASTER_USERNAME.upper() for sid in ids)
+
+def battle_state(raw):
+    try:return json.loads(raw or '{}')
+    except Exception:return {}
+
+def max_hp_for(c,uid):
+    u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
+    return float(combat_stats_for(c,u)['HP'])
+
+def is_toji(c,uid): return character_tree(c,uid)=='toji'
+
+def apply_hakari_regen(c,uid,hp,state,log):
+    rounds=int(state.get('hakari_rounds',0) or 0)
+    if rounds>0 and hp>0:
+        hp=max_hp_for(c,uid); rounds-=1; state['hakari_rounds']=rounds
+        log.append(f'Hakari: regeneração automática. HP voltou para {hp:.0f}. Rodadas restantes: {rounds}.')
+    return hp
+
+def battle_damage_multiplier(c,uid):
+    return 2.0 if is_toji(c,uid) else 1.0
 
 def battle_stats(c,uid):
     u=c.execute('SELECT * FROM users WHERE id=?',(uid,)).fetchone()
@@ -826,7 +893,7 @@ def entities():
             # O dado do ataque básico NÃO é rolado na criação da maldição.
             # A expressão é guardada e um novo d4 é rolado a cada turno.
             damage_expr='1d4'
-            pool=[x for x in SKILLS if x[3]<=g['ct']]
+            pool=[x for x in SKILLS if x[3]<=g['ct'] and x[6] not in ('universal','hakari','toji')]
             skills=[]
             if pool:
                 skills=random.sample(pool,min(len(pool),random.randint(1,min(3,len(pool)))))
@@ -860,7 +927,7 @@ def start_entity_battle():
     valid.pop(idx)
     c.execute('UPDATE hunts SET entities_json=? WHERE user_id=? AND day=?',(json.dumps(valid,ensure_ascii=False),u['id'],iso(today())))
     st=combat_stats_for(c,u)
-    bid=insert_and_get_id(c, 'INSERT INTO entity_battles(user_id,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json) VALUES(?,?,?,?,?,?,?,?)',(u['id'],json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([])));c.commit();c.close();return jsonify(id=bid)
+    bid=insert_and_get_id(c, 'INSERT INTO entity_battles(user_id,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json,state_json) VALUES(?,?,?,?,?,?,?,?,?)',(u['id'],json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([]),json.dumps({})));c.commit();c.close();return jsonify(id=bid)
 
 @app.get('/api/entity-battles/<int:bid>')
 def get_entity_battle(bid):
@@ -873,62 +940,64 @@ def get_entity_battle(bid):
     for r in c.execute('SELECT skill_id FROM user_skills WHERE user_id=? AND equipped=1',(u['id'],)):
         sk=skill_dict(r['skill_id'])
         if sk: equipped.append(sk)
-    c.close();return jsonify(id=bid,entity=e,seu_hp=float(b['hp_player']),seu_ce=float(b['ce_player']),inimigo_hp=float(b['hp_entity']),status=b['status'],meu_turno=b['turn']=='player',log=log[-8:],skills=equipped)
+    state=battle_state(b['state_json'] if 'state_json' in b.keys() else '{}'); specials=[]
+    if character_tree(c,u['id'])=='hakari' and domain_unlocked(c,u['id']) and int(state.get('hakari_rounds',0))<=0: specials.append({'id':'__hakari_domain__','nome':'🎰 Ativar Domínio / Jackpot','ce':240})
+    c.close();return jsonify(id=bid,entity=e,seu_hp=float(b['hp_player']),seu_ce=float(b['ce_player']),inimigo_hp=float(b['hp_entity']),status=b['status'],meu_turno=b['turn']=='player',log=log[-8:],skills=equipped,specials=specials)
 
 @app.post('/api/entity-battles/<int:bid>/action')
 def entity_battle_action(bid):
     u,err=require_user()
     if err:return err
-    import random
+    import random,re
     d=request.get_json(silent=True) or {}; c=db(); b=c.execute('SELECT * FROM entity_battles WHERE id=? AND user_id=?',(bid,u['id'])).fetchone()
     if not b:c.close();return jsonify(error='Combate não encontrado.'),404
     if b['status']!='active':c.close();return jsonify(error='Esse combate já terminou.'),400
     if b['turn']!='player':c.close();return jsonify(error='Aguarde o turno da maldição.'),400
-    e=json.loads(b['entity_json']); hp=float(b['hp_player']); ce=float(b['ce_player']); ehp=float(b['hp_entity']); log=json.loads(b['log_json']); sid=d.get('skill_id'); dmg=0
-    # Turno do jogador: executa ataque básico ou técnica equipada.
-    if sid:
-        sk=skill_dict(sid); owned=c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=? AND equipped=1',(u['id'],sid)).fetchone()
-        if not sk or not owned:c.close();return jsonify(error='Skill inválida ou não equipada.'),400
-        if ce<sk['ce']:c.close();return jsonify(error='CE insuficiente.'),400
-        ce-=sk['ce']
-        base=sk['ct']
-        dice_match=__import__('re').search(r'(\d+d\d+)',sk['efeito'])
-        if dice_match: dmg=base+roll_dice(dice_match.group(1))
-        else: dmg=base+random.randint(1,4)
-        dmg=round(dmg*vote_power_multiplier(c,u['id']))
-        log.append(f'Você usou {sk["nome"]} e causou {dmg} dano.')
+    e=json.loads(b['entity_json']); hp=float(b['hp_player']); ce=float(b['ce_player']); ehp=float(b['hp_entity']); log=json.loads(b['log_json']); state=battle_state(b['state_json'] if 'state_json' in b.keys() else '{}'); sid=d.get('skill_id'); key='player'; bonus_key='damage_bonus'; rounds_key='hakari_rounds'; dmg=0
+    if sid=='enhanced-attack':
+        amount=int(d.get('amount',0));
+        if amount<=0:c.close();return jsonify(error='Informe um número inteiro positivo de dano adicional.'),400
+        cost=amount*100
+        if ce<cost:c.close();return jsonify(error=f'CE insuficiente. Custo: {cost} CE.'),400
+        ce-=cost;state[bonus_key]=int(state.get(bonus_key,0))+amount;log.append(f'{u["username"]} ativou Ataque Aprimorado: +{amount} dano constante.')
+    elif sid=='reverse-energy':
+        amount=int(d.get('amount',0));
+        if amount<=0:c.close();return jsonify(error='Informe um número inteiro positivo de HP.'),400
+        cost=amount*20
+        if ce<cost:c.close();return jsonify(error=f'CE insuficiente. Custo: {cost} CE.'),400
+        maxhp=max_hp_for(c,u['id']); healed=min(amount,maxhp-hp);ce-=cost;hp=min(maxhp,hp+healed);log.append(f'{u["username"]} usou Energia Reversa e recuperou {int(healed)} HP.')
+    elif sid=='__hakari_domain__':
+        if character_tree(c,u['id'])!='hakari' or not domain_unlocked(c,u['id']):c.close();return jsonify(error='O domínio de Hakari ainda não está desbloqueado.'),400
+        if ce<240:c.close();return jsonify(error='CE insuficiente para ativar o domínio.'),400
+        ce-=240;state[rounds_key]=4;hp=max_hp_for(c,u['id']);log.append('Hakari ativou o domínio e entrou no estado de regeneração automática por 4 rodadas.')
     else:
-        dmg=round(random.randint(1,4)*vote_power_multiplier(c,u['id']))
-        log.append(f'Você atacou e causou {dmg} dano. (d4)')
-    ehp=max(0,ehp-dmg)
-    if ehp<=0:
-        reward=entity_xp_reward(hp,e['hp']); c.execute('UPDATE users SET xp=xp+? WHERE id=?',(reward,u['id'])); log.append(f'Maldição derrotada! +{reward} XP.'); status='finished'; turn='player'
-    else:
-        # A IA da maldição sorteia NOVAMENTE a cada ataque. A divisão é igual
-        # entre ataque básico e cada técnica disponível.
-        enemy_options=[{'tipo':'basic'}]+[{'tipo':'skill','skill':s} for s in e.get('skills',[]) ]
-        choice=random.choice(enemy_options)
-        if choice['tipo']=='skill':
-            es=choice['skill']
-            escost=int(es.get('ce',0) or 0)
-            if ce >= 0 and float(e.get('ce',0)) >= escost:
-                e['ce']=float(e.get('ce',0))-escost
-                effect=str(es.get('efeito',''))
-                m=__import__('re').search(r'(\d+d\d+)',effect)
-                edmg=int(es.get('ct',1) or 1) + (roll_dice(m.group(1)) if m else random.randint(1,4))
-                log.append(f'{e["grade"]} usou {es["nome"]} e causou {edmg} dano.')
-            else:
-                edmg=random.randint(1,4)
-                log.append(f'{e["grade"]} tentou usar {es["nome"]}, mas não tinha CE suficiente; atacou e causou {edmg} dano. (d4)')
+        sk=skill_dict(sid) if sid else None
+        if sid and not sk:c.close();return jsonify(error='Skill inválida.'),400
+        if sk:
+            owned=c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=? AND equipped=1',(u['id'],sid)).fetchone()
+            if not owned:c.close();return jsonify(error='Skill inválida ou não equipada.'),400
+            if ce<sk['ce']:c.close();return jsonify(error='CE insuficiente.'),400
+            ce-=sk['ce'];rolls=[]
+            for m in re.finditer(r'(\d+)d(\d+)',sk['efeito']): rolls.extend(random.randint(1,int(m.group(2))) for _ in range(int(m.group(1))))
+            dmg=(sum(rolls) if rolls else 1)+int(state.get(bonus_key,0));dmg=round(dmg*vote_power_multiplier(c,u['id'])*battle_damage_multiplier(c,u['id']));ehp=max(0,ehp-dmg);log.append(f'Você usou {sk["nome"]} e causou {dmg} dano.')
         else:
-            edmg=random.randint(1,4)
-            log.append(f'{e["grade"]} atacou e causou {edmg} dano. (d4)')
-        hp=max(0,hp-edmg); status='finished' if hp<=0 else 'active'; turn='player'
-        if hp<=0: log.append('Você foi derrotado.')
-        # Persiste a CE restante e o estado da maldição para o próximo sorteio.
-        b_entity=json.dumps(e,ensure_ascii=False)
-    if 'b_entity' not in locals(): b_entity=json.dumps(e,ensure_ascii=False)
-    c.execute('UPDATE entity_battles SET entity_json=?,hp_player=?,ce_player=?,hp_entity=?,status=?,turn=?,log_json=? WHERE id=?',(b_entity,hp,ce,ehp,status,turn,json.dumps(log,ensure_ascii=False),bid));c.commit();c.close();return jsonify(ok=True)
+            dmg=round((random.randint(1,4)+int(state.get(bonus_key,0)))*vote_power_multiplier(c,u['id'])*battle_damage_multiplier(c,u['id']));ehp=max(0,ehp-dmg);log.append(f'Você atacou e causou {dmg} dano.')
+    if ehp<=0:
+        reward=entity_xp_reward(hp,e['hp']);c.execute('UPDATE users SET xp=xp+? WHERE id=?',(reward,u['id']));log.append(f'Maldição derrotada! +{reward} XP.');status='finished';turn='player'
+    else:
+        options=[{'tipo':'basic'}]+[{'tipo':'skill','skill':x} for x in e.get('skills',[])]
+        choice=random.choice(options);esc=float(e.get('ce',0))
+        if choice['tipo']=='skill' and esc>=float(choice['skill'].get('ce',0)):
+            es=choice['skill'];cost=int(es.get('ce',0) or 0);e['ce']=esc-cost;mm=re.search(r'(\d+d\d+)',str(es.get('efeito','')));edmg=(int(es.get('ct',1) or 1)+(roll_dice(mm.group(1)) if mm else random.randint(1,4)));log.append(f'{e["grade"]} usou {es["nome"]} e causou {edmg} dano.')
+        else:
+            edmg=random.randint(1,4);log.append(f'{e["grade"]} atacou e causou {edmg} dano.')
+        hp=max(0,hp-edmg)
+        if hp<=0:
+            status='finished';turn='player';log.append('Você foi derrotado.')
+        else:
+            hp=apply_hakari_regen(c,u['id'],hp,state,log) if character_tree(c,u['id'])=='hakari' else hp
+            status='active';turn='player'
+    c.execute('UPDATE entity_battles SET entity_json=?,hp_player=?,ce_player=?,hp_entity=?,status=?,turn=?,log_json=?,state_json=? WHERE id=?',(json.dumps(e,ensure_ascii=False),hp,ce,ehp,status,turn,json.dumps(log,ensure_ascii=False),json.dumps(state,ensure_ascii=False),bid));c.commit();c.close();return jsonify(ok=True)
 
 @app.get('/api/pvp-status')
 def pvp_status():
@@ -1013,8 +1082,8 @@ def respond_pvp_challenge(cid):
     s1=battle_stats(c,ch['challenger_id']); s2=battle_stats(c,ch['challenged_id'])
     starter=ch['challenger_id'] if __import__('random').randint(0,1)==0 else ch['challenged_id']
     log=[f'{challenger} desafiou {challenged}.',f'Desafio aceito. Sorteio 50/50: {challenger if starter==ch["challenger_id"] else challenged} começa.']
-    bid=insert_and_get_id(c,'INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?)',
-                          (ch['challenger_id'],ch['challenged_id'],starter,'active',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps(log,ensure_ascii=False)))
+    bid=insert_and_get_id(c,'INSERT INTO battles(player1,player2,turn_user,status,hp1,ce1,hp2,ce2,log_json) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                          (ch['challenger_id'],ch['challenged_id'],starter,'active',s1['HP'],s1['CE'],s2['HP'],s2['CE'],json.dumps(log,ensure_ascii=False),json.dumps({},ensure_ascii=False)))
     for uid in (ch['challenger_id'],ch['challenged_id']):
         c.execute('INSERT INTO pvp_daily(user_id,day,count) VALUES(?,?,1) ON CONFLICT(user_id,day) DO UPDATE SET count=pvp_daily.count+1',(uid,day))
     c.execute("UPDATE pvp_challenges SET status='accepted',battle_id=? WHERE id=?",(bid,cid))
@@ -1053,41 +1122,64 @@ def get_battle(bid):
         if d:skills.append(d)
     try:log=json.loads(b['log_json'])
     except:log=[]
-    c.close();return jsonify(id=bid,jogador1=names[0],jogador2=names[1],status=b['status'],meu_turno=b['turn_user']==u['id'],seu_hp=float(myhp),seu_ce=float(myce),inimigo_hp=float(ohp),skills=skills,log=log[-6:])
+    state=battle_state(b['state_json'] if 'state_json' in b.keys() else '{}'); specials=[]
+    if character_tree(c,u['id'])=='hakari' and domain_unlocked(c,u['id']) and int(state.get('hakari_rounds',0))<=0: specials.append({'id':'__hakari_domain__','nome':'🎰 Ativar Domínio / Jackpot','ce':240})
+    c.close();return jsonify(id=bid,jogador1=names[0],jogador2=names[1],status=b['status'],meu_turno=b['turn_user']==u['id'],seu_hp=float(myhp),seu_ce=float(myce),inimigo_hp=float(ohp),skills=skills,specials=specials,log=log[-6:])
 
 @app.post('/api/battles/<int:bid>/action')
 def battle_action(bid):
     u,err=require_user()
     if err:return err
-    d=request.get_json(silent=True) or {};sid=d.get('skill_id');c=db();b=c.execute('SELECT * FROM battles WHERE id=? AND (player1=? OR player2=?)',(bid,u['id'],u['id'])).fetchone()
+    d=request.get_json(silent=True) or {}; sid=d.get('skill_id'); c=db()
+    b=c.execute('SELECT * FROM battles WHERE id=? AND (player1=? OR player2=?)',(bid,u['id'],u['id'])).fetchone()
     if not b:c.close();return jsonify(error='Combate não encontrado.'),404
     if b['status']!='active':c.close();return jsonify(error='Esse combate já terminou.'),400
     if b['turn_user']!=u['id']:c.close();return jsonify(error='Ainda não é o seu turno.'),400
-    me1=b['player1']==u['id']; myhp=float(b['hp1'] if me1 else b['hp2']);myce=float(b['ce1'] if me1 else b['ce2']);ohp=float(b['hp2'] if me1 else b['hp1']);ohp_before=ohp;opp=b['player2'] if me1 else b['player1'];
-    import random
-    if sid:
-        sk=skill_dict(sid)
-        if not sk:c.close();return jsonify(error='Skill inválida.'),400
-        owned=c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=? AND equipped=1',(u['id'],sid)).fetchone()
-        if not owned:c.close();return jsonify(error='Essa skill não está equipada.'),400
-        if myce<sk['ce']:c.close();return jsonify(error='CE insuficiente.'),400
-        myce-=sk['ce'];rolls=[]
-        if '2d6' in sk['efeito']:rolls=[random.randint(1,6),random.randint(1,6)]
-        elif '2d4' in sk['efeito']:rolls=[random.randint(1,4),random.randint(1,4)]
-        elif '1d6' in sk['efeito']:rolls=[random.randint(1,6)]
-        elif '1d4' in sk['efeito']:rolls=[random.randint(1,4)]
-        dmg=(sum(rolls) if rolls else 0) + (sk['ct'] if sk['categoria']=='elementar' else 0);dmg=round(dmg*vote_power_multiplier(c,u['id']));ohp=max(0,ohp-dmg);msg=f'{u["username"]} usou {sk["nome"]} e causou {dmg} dano.'
-    else:
-        dmg=round(random.randint(1,4)*vote_power_multiplier(c,u['id']));ohp=max(0,ohp-dmg);msg=f'{u["username"]} atacou e causou {dmg} dano.'
+    me1=b['player1']==u['id']; myhp=float(b['hp1'] if me1 else b['hp2']); myce=float(b['ce1'] if me1 else b['ce2']); ohp=float(b['hp2'] if me1 else b['hp1']); ohp_before=ohp; opp=b['player2'] if me1 else b['player1']
+    state=battle_state(b['state_json'] if 'state_json' in b.keys() else '{}'); import random, re
     try:log=json.loads(b['log_json'])
     except:log=[]
-    log.append(msg)
-    status='active';turn=opp
+    key='p1' if me1 else 'p2'; rounds_key=f'hakari_rounds_{key}'; bonus_key=f'damage_bonus_{key}'
+    if sid=='enhanced-attack':
+        amount=int(d.get('amount',0))
+        if amount<=0:c.close();return jsonify(error='Informe um número inteiro positivo de dano adicional.'),400
+        cost=amount*100
+        if myce<cost:c.close();return jsonify(error=f'CE insuficiente. Custo: {cost} CE.'),400
+        myce-=cost; state[bonus_key]=int(state.get(bonus_key,0))+amount; log.append(f'{u["username"]} ativou Ataque Aprimorado: +{amount} dano constante.')
+    elif sid=='reverse-energy':
+        amount=int(d.get('amount',0))
+        if amount<=0:c.close();return jsonify(error='Informe um número inteiro positivo de HP.'),400
+        cost=amount*20
+        if myce<cost:c.close();return jsonify(error=f'CE insuficiente. Custo: {cost} CE.'),400
+        maxhp=max_hp_for(c,u['id']); healed=min(amount,maxhp-myhp)
+        myce-=cost; myhp=min(maxhp,myhp+healed); log.append(f'{u["username"]} usou Energia Reversa e recuperou {int(healed)} HP.')
+    elif sid=='__hakari_domain__':
+        if character_tree(c,u['id'])!='hakari' or not domain_unlocked(c,u['id']):c.close();return jsonify(error='O domínio de Hakari ainda não está desbloqueado.'),400
+        if myce<240:c.close();return jsonify(error='CE insuficiente para ativar o domínio.'),400
+        myce-=240; state[rounds_key]=4; myhp=max_hp_for(c,u['id']); log.append('Hakari ativou o domínio e entrou no estado de regeneração automática por 4 rodadas.')
+    else:
+        sk=skill_dict(sid) if sid else None
+        if sid and not sk:c.close();return jsonify(error='Skill inválida.'),400
+        if sk:
+            owned=c.execute('SELECT 1 FROM user_skills WHERE user_id=? AND skill_id=? AND equipped=1',(u['id'],sid)).fetchone()
+            if not owned:c.close();return jsonify(error='Essa skill não está equipada.'),400
+            if myce<sk['ce']:c.close();return jsonify(error='CE insuficiente.'),400
+            myce-=sk['ce']; rolls=[]
+            for m in re.finditer(r'(\d+)d(\d+)',sk['efeito']): rolls.extend(random.randint(1,int(m.group(2))) for _ in range(int(m.group(1))))
+            dmg=(sum(rolls) if rolls else 1)+int(state.get(bonus_key,0)); dmg=round(dmg*vote_power_multiplier(c,u['id'])*battle_damage_multiplier(c,u['id'])); ohp=max(0,ohp-dmg); log.append(f'{u["username"]} usou {sk["nome"]} e causou {dmg} dano.')
+        else:
+            dmg=round((random.randint(1,4)+int(state.get(bonus_key,0)))*vote_power_multiplier(c,u['id'])*battle_damage_multiplier(c,u['id'])); ohp=max(0,ohp-dmg); log.append(f'{u["username"]} atacou e causou {dmg} dano.')
+    # A regeneração de Hakari acontece depois que ele sobrevive ao ataque/ação do adversário.
+    if myhp>0 and int(state.get(rounds_key,0) or 0)>0 and sid!='__hakari_domain__':
+        myhp=apply_hakari_regen(c,u['id'],myhp,state,log)
+    status='active'; turn=opp
     if ohp<=0:
-        status='finished';turn=u['id'];reward=player_xp_reward(myhp,ohp_before) if ohp_before>0 else 0
-        c.execute('UPDATE users SET xp=xp+? WHERE id=?',(reward,u['id']));log.append(f'{u["username"]} venceu o combate e ganhou {reward} XP!')
-    if me1:c.execute('UPDATE battles SET hp1=?,ce1=?,hp2=?,turn_user=?,status=?,log_json=? WHERE id=?',(myhp,myce,ohp,turn,status,json.dumps(log),bid))
-    else:c.execute('UPDATE battles SET hp2=?,ce2=?,hp1=?,turn_user=?,status=?,log_json=? WHERE id=?',(myhp,myce,ohp,turn,status,json.dumps(log),bid))
+        status='finished';turn=u['id'];reward=player_xp_reward(myhp,ohp_before);c.execute('UPDATE users SET xp=xp+? WHERE id=?',(reward,u['id']));log.append(f'{u["username"]} venceu o combate e ganhou {reward} XP!')
+    else:
+        # Se o oponente for Hakari, a regeneração será aplicada no fim do turno dele.
+        pass
+    if me1:c.execute('UPDATE battles SET hp1=?,ce1=?,hp2=?,turn_user=?,status=?,log_json=?,state_json=? WHERE id=?',(myhp,myce,ohp,turn,status,json.dumps(log),json.dumps(state),bid))
+    else:c.execute('UPDATE battles SET hp2=?,ce2=?,hp1=?,turn_user=?,status=?,log_json=?,state_json=? WHERE id=?',(myhp,myce,ohp,turn,status,json.dumps(log),json.dumps(state),bid))
     c.commit();c.close();return jsonify(ok=True)
 
 if __name__=='__main__':app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)),debug=True)

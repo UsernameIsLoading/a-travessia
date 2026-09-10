@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: a-travessia
+    name: cursed-mission
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
