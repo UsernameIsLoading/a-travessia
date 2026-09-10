@@ -260,7 +260,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS battles(id SERIAL PRIMARY KEY,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 DOUBLE PRECISION,ce1 DOUBLE PRECISION,hp2 DOUBLE PRECISION,ce2 DOUBLE PRECISION,log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-        CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS entity_battles(id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,day TEXT,entity_json TEXT NOT NULL,hp_player DOUBLE PRECISION,ce_player DOUBLE PRECISION,hp_entity DOUBLE PRECISION,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
         c.execute('ALTER TABLE characters ADD COLUMN IF NOT EXISTS skill_tree TEXT')
@@ -268,6 +268,7 @@ def init_db():
         c.execute("UPDATE users SET progress_started_at=COALESCE(progress_started_at, TO_CHAR(created_at, 'YYYY-MM-DD')) WHERE progress_started_at IS NULL")
         c.execute("ALTER TABLE battles ADD COLUMN IF NOT EXISTS state_json TEXT NOT NULL DEFAULT '{}'")
         c.execute("ALTER TABLE entity_battles ADD COLUMN IF NOT EXISTS state_json TEXT NOT NULL DEFAULT '{}'")
+        c.execute("ALTER TABLE entity_battles ADD COLUMN IF NOT EXISTS day TEXT")
     else:
         c.executescript('''
         CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,last_processed_day TEXT,xp INTEGER NOT NULL DEFAULT 0,progress_started_at TEXT);
@@ -279,7 +280,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS user_skills(user_id INTEGER NOT NULL,skill_id TEXT NOT NULL,equipped INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,skill_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS battles(id INTEGER PRIMARY KEY AUTOINCREMENT,player1 INTEGER NOT NULL,player2 INTEGER NOT NULL,turn_user INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'active',hp1 REAL,ce1 REAL,hp2 REAL,ce2 REAL,log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(player1) REFERENCES users(id),FOREIGN KEY(player2) REFERENCES users(id));
         CREATE TABLE IF NOT EXISTS hunts(user_id INTEGER NOT NULL,day TEXT NOT NULL,entities_json TEXT NOT NULL,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
-        CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+        CREATE TABLE IF NOT EXISTS entity_battles(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,day TEXT,entity_json TEXT NOT NULL,hp_player REAL,ce_player REAL,hp_entity REAL,status TEXT NOT NULL DEFAULT 'active',turn TEXT NOT NULL DEFAULT 'player',log_json TEXT NOT NULL DEFAULT '[]',state_json TEXT NOT NULL DEFAULT '{}',FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         CREATE TABLE IF NOT EXISTS pvp_daily(user_id INTEGER NOT NULL,day TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(user_id,day),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
         ''')
         cols=[r['name'] for r in c.execute('PRAGMA table_info(tasks)')]
@@ -292,6 +293,8 @@ def init_db():
         if 'state_json' not in cols: c.execute("ALTER TABLE battles ADD COLUMN state_json TEXT NOT NULL DEFAULT '{}'")
         cols=[r['name'] for r in c.execute('PRAGMA table_info(entity_battles)')]
         if 'state_json' not in cols: c.execute("ALTER TABLE entity_battles ADD COLUMN state_json TEXT NOT NULL DEFAULT '{}'")
+        cols=[r['name'] for r in c.execute('PRAGMA table_info(entity_battles)')]
+        if 'day' not in cols: c.execute("ALTER TABLE entity_battles ADD COLUMN day TEXT")
         for r in c.execute("SELECT DISTINCT user_id,class FROM tasks WHERE type='voto'").fetchall():
             c.execute('INSERT OR IGNORE INTO vote_bonuses(user_id,class,bonus) VALUES (?,?,0.5)',(r['user_id'],r['class']))
     ensure_pvp_challenges(c)
@@ -690,6 +693,35 @@ def save_character():
     if old and old['skill_tree'] and old['skill_tree']!=tree:c.close();return jsonify(error='A Skill Tree não pode ser trocada depois da criação.'),400
     c.execute('INSERT INTO characters(user_id,body,mind,soul,class_name,skill_tree) VALUES(?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body,mind=excluded.mind,soul=excluded.soul,class_name=excluded.class_name,skill_tree=COALESCE(characters.skill_tree,excluded.skill_tree)',(u['id'],body,mind,soul,cls,tree));c.commit();c.close();return jsonify(ok=True)
 
+
+@app.post('/api/skill-tree/change')
+def change_skill_tree():
+    u,err=require_user()
+    if err:return err
+    d=request.get_json(silent=True) or {}; new_tree=str(d.get('tree_id','')).strip()
+    if new_tree not in SELECTABLE_TREES:
+        return jsonify(error='Skill Tree inválida.'),400
+    c=db()
+    try:
+        ch=c.execute('SELECT * FROM characters WHERE user_id=?',(u['id'],)).fetchone()
+        if not ch or not ch['skill_tree']:
+            c.close(); return jsonify(error='Crie seu personagem antes de trocar de Skill Tree.'),400
+        if ch['skill_tree']==new_tree:
+            c.close(); return jsonify(error='Você já está nessa Skill Tree.'),400
+        cost=200; master=str(u['username']).upper()==MASTER_USERNAME.upper()
+        if not master and int(u['xp'] or 0)<cost:
+            c.close(); return jsonify(error='Você precisa de 200 XP para trocar de Skill Tree.'),400
+        if not master: c.execute('UPDATE users SET xp=xp-? WHERE id=?',(cost,u['id']))
+        c.execute('DELETE FROM user_skills WHERE user_id=? AND skill_id NOT IN ('enhanced-attack', 'reverse-energy')',(u['id'],))
+        c.execute('UPDATE characters SET skill_tree=? WHERE user_id=?',(new_tree,u['id']))
+        c.commit(); c.close()
+        return jsonify(ok=True,skill_tree=new_tree,xp_gasto=0 if master else cost,skills_perdidas=True)
+    except Exception:
+        try:c.rollback();c.close()
+        except Exception:pass
+        app.logger.exception('Erro ao trocar Skill Tree')
+        return jsonify(error='Não foi possível trocar a Skill Tree agora.'),500
+
 def attributes_for(c,uid):
     ch=c.execute('SELECT * FROM characters WHERE user_id=?',(uid,)).fetchone()
     base={'body':0.0,'mind':0.0,'soul':0.0} if not ch else {'body':float(ch['body'] or 0),'mind':float(ch['mind'] or 0),'soul':float(ch['soul'] or 0)}
@@ -726,16 +758,32 @@ def combat_stats_for(c,u):
 def profile():
     u,err=require_user()
     if err:return err
-    c=db();process_until_yesterday(c,u);vals={x:{'dias':0,'ultimoDia':None} for x in CLASSES}
-    for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):vals[r['class']]={'dias':int(r['days']),'ultimoDia':r['last_day']}
-    vals=current_day_streaks(c,u['id'],vals);days={x:int(vals[x]['dias']) for x in CLASSES};base,bonus,eff,ch,growth=attributes_for(c,u['id']);prog=progression_for(c,u); stats=combat_stats_for(c,u); tree=tree_payload(ch['skill_tree'] if ch and 'skill_tree' in ch.keys() else None);c.commit();c.close()
-    return jsonify(usuario=u['username'],base=base,voto=bonus,atributos=eff,dias=days,stats=stats,progresso=prog,skill_tree=tree)
+    c=None
+    try:
+        c=db(); process_until_yesterday(c,u)
+        vals={x:{'dias':0,'ultimoDia':None} for x in CLASSES}
+        for r in c.execute('SELECT class,days,last_day FROM streaks WHERE user_id=?',(u['id'],)):
+            vals[r['class']]={'dias':int(r['days'] or 0),'ultimoDia':r['last_day']}
+        vals=current_day_streaks(c,u['id'],vals)
+        days={x:int(vals[x]['dias']) for x in CLASSES}
+        base,bonus,eff,ch,growth=attributes_for(c,u['id'])
+        prog=progression_for(c,u); stats=combat_stats_for(c,u)
+        tree_id=ch['skill_tree'] if ch else None
+        tree=tree_payload(tree_id)
+        c.commit(); c.close(); c=None
+        return jsonify(usuario=str(u['username']),base=base,voto=bonus,atributos=eff,dias=days,stats=stats,progresso=prog,skill_tree=tree)
+    except Exception:
+        if c is not None:
+            try:c.rollback();c.close()
+            except Exception:pass
+        app.logger.exception('Erro ao carregar perfil')
+        return jsonify(error='Não foi possível carregar o perfil agora. Tente atualizar a página.'),500
 
 def skill_xp_cost(item):
     sid=item[0]; skill_ct=item[3]
     if sid=='enhanced-attack': return 50
     if sid=='reverse-energy': return 100
-    if item[6]=='toji':
+    if len(item)>6 and item[6]=='toji':
         return {'toji-equip-1':75,'toji-equip-2':100,'toji-equip-3':125,'toji-equip-4':150,'toji-equip-5':200,'toji-equip-6':300}.get(sid,100)
     return {1:50,2:100,3:175,4:275}.get(skill_ct,50)
 
@@ -789,7 +837,7 @@ def toggle_skill(skill_id):
     if err:return err
     item=next((x for x in SKILLS if x[0]==skill_id),None)
     if not item:return jsonify(error='Técnica não encontrada.'),404
-    if item[6]=='toji': return jsonify(error='Equipamentos especiais são nós passivos da Skill Tree e não ocupam CT.') ,400
+    if len(item)>6 and item[6]=='toji': return jsonify(error='Equipamentos especiais são nós passivos da Skill Tree e não ocupam CT.') ,400
     c=db()
     master=str(u['username']).upper()==MASTER_USERNAME.upper()
     row=c.execute('SELECT equipped FROM user_skills WHERE user_id=? AND skill_id=?',(u['id'],skill_id)).fetchone()
@@ -881,9 +929,12 @@ def entities():
     u,err=require_user()
     if err:return err
     c=db(); prog=progression_for(c,u); days=prog['dias']; import random
-    row=c.execute('SELECT entities_json FROM hunts WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone()
+    today_key=iso(today())
+    fight_count=int(c.execute('SELECT COUNT(*) AS n FROM entity_battles WHERE user_id=? AND day=?',(u['id'],today_key)).fetchone()['n'] or 0)
+    remaining=max(0,2-fight_count)
+    row=c.execute('SELECT entities_json FROM hunts WHERE user_id=? AND day=?',(u['id'],today_key)).fetchone()
     if row:
-        out=json.loads(row['entities_json']); c.close(); return jsonify(usou=True,entidades=out,streak=days)
+        out=json.loads(row['entities_json']); c.close(); return jsonify(usou=True,entidades=out,streak=days,limite_diario=2,lutas_usadas=fight_count,lutas_restantes=remaining)
     rank={'Grade 4':0,'Grade 3':1,'Grade 2':2,'Grade 1':3,'Special Grade':4}.get(prog['grade'],0)
     eligible=[g for g in ENTITY_GRADES if {'Grade 4':0,'Grade 3':1,'Grade 2':2,'Grade 1':3,'Special Grade':4}.get(g['grade'],0)<=rank]
     out=[]
@@ -898,8 +949,8 @@ def entities():
             if pool:
                 skills=random.sample(pool,min(len(pool),random.randint(1,min(3,len(pool)))))
             out.append({'grade':g['grade'],'streak':days,'hp':hp,'damage_expr':damage_expr,'damage':damage_expr,'ct':g['ct'],'ce':g['ce'],'multiplayer':g['ct']>=3,'skills':[{'id':x[0],'nome':x[1],'ct':x[3],'ce':x[4],'efeito':skill_dict(x[0])['efeito']} for x in skills]})
-    c.execute('INSERT INTO hunts(user_id,day,entities_json) VALUES(?,?,?)',(u['id'],iso(today()),json.dumps(out,ensure_ascii=False)));c.commit();c.close()
-    return jsonify(usou=True,entidades=out,streak=days)
+    c.execute('INSERT INTO hunts(user_id,day,entities_json) VALUES(?,?,?)',(u['id'],today_key,json.dumps(out,ensure_ascii=False)));c.commit();c.close()
+    return jsonify(usou=True,entidades=out,streak=days,limite_diario=2,lutas_usadas=fight_count,lutas_restantes=remaining)
 
 @app.post('/api/hunt')
 def hunt():
@@ -916,7 +967,11 @@ def start_entity_battle():
     if err:return err
     d=request.get_json(silent=True) or {}; entity=d.get('entity')
     if not isinstance(entity,dict) or not entity.get('grade'): return jsonify(error='Maldição inválida.'),400
-    c=db(); row=c.execute('SELECT entities_json FROM hunts WHERE user_id=? AND day=?',(u['id'],iso(today()))).fetchone()
+    c=db(); today_key=iso(today())
+    daily_count=int(c.execute('SELECT COUNT(*) AS n FROM entity_battles WHERE user_id=? AND day=?',(u['id'],today_key)).fetchone()['n'] or 0)
+    if daily_count>=2:
+        c.close();return jsonify(error='Você já realizou as 2 lutas contra maldições permitidas hoje.'),400
+    row=c.execute('SELECT entities_json FROM hunts WHERE user_id=? AND day=?',(u['id'],today_key)).fetchone()
     if not row:c.close();return jsonify(error='Use CAÇAR MALDIÇÃO primeiro.'),400
     valid=json.loads(row['entities_json']);
     idx=next((i for i,x in enumerate(valid) if json.dumps(entity,sort_keys=True)==json.dumps(x,sort_keys=True)),None)
@@ -925,9 +980,10 @@ def start_entity_battle():
     # em que o combate é iniciado, então ela não volta a aparecer nem pode ser
     # iniciada novamente, independentemente de vitória ou derrota.
     valid.pop(idx)
-    c.execute('UPDATE hunts SET entities_json=? WHERE user_id=? AND day=?',(json.dumps(valid,ensure_ascii=False),u['id'],iso(today())))
+    c.execute('UPDATE hunts SET entities_json=? WHERE user_id=? AND day=?',(json.dumps(valid,ensure_ascii=False),u['id'],today_key))
     st=combat_stats_for(c,u)
-    bid=insert_and_get_id(c, 'INSERT INTO entity_battles(user_id,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json,state_json) VALUES(?,?,?,?,?,?,?,?,?)',(u['id'],json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([]),json.dumps({})));c.commit();c.close();return jsonify(id=bid)
+    bid=insert_and_get_id(c, 'INSERT INTO entity_battles(user_id,day,entity_json,hp_player,ce_player,hp_entity,status,turn,log_json,state_json) VALUES(?,?,?,?,?,?,?,?,?,?)',(u['id'],today_key,json.dumps(entity,ensure_ascii=False),st['HP'],st['CE'],float(entity['hp']),'active','player',json.dumps([]),json.dumps({})))
+    c.commit();c.close();return jsonify(id=bid,lutas_restantes=max(0,1-daily_count))
 
 @app.get('/api/entity-battles/<int:bid>')
 def get_entity_battle(bid):

@@ -584,7 +584,7 @@ button{cursor:pointer}
 }
 </style>
 
-</head>
+<style id="cm-v10-refresh">.profile-card,.profile-panel,.mission-card,.mission-panel{border-radius:18px;box-shadow:0 12px 35px rgba(0,0,0,.24)}.profile-card button,.profile-panel button,.mission-card button,.mission-panel button{border-radius:10px;transition:.15s}.profile-card button:hover,.profile-panel button:hover,.mission-card button:hover,.mission-panel button:hover{transform:translateY(-1px)}.cm-v10-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.cm-v10-sub{opacity:.7;font-size:.9rem}</style></head>
 <body>
 
 
@@ -994,7 +994,7 @@ button{cursor:pointer}
   <section class="panel">
     <div class="form"><input id="oponenteCombate" type="text" placeholder="Usuário do adversário"><button class="main-btn red-btn" onclick="iniciarCombate()">ENVIAR DESAFIO</button></div>
     <div id="pvpChallengesBox" class="skill-shop" style="margin-top:12px"></div>
-    <div class="skill-card" style="margin-top:12px"><h2>☠️ CAÇAR MALDIÇÃO</h2><p>Você pode caçar apenas uma vez por dia. As maldições disponíveis dependem do seu maior streak.</p><button id="botaoCacar" class="main-btn purple-btn" onclick="cacarMaldicao()">CAÇAR MALDIÇÃO</button><div id="cacaBox" class="skill-shop"></div></div>
+    <div class="skill-card" style="margin-top:12px"><h2>☠️ CAÇAR MALDIÇÃO</h2><p id="cacaLimite">Você pode realizar até 2 lutas contra maldições por dia. As maldições disponíveis dependem do seu maior streak.</p><button id="botaoCacar" class="main-btn purple-btn" onclick="cacarMaldicao()">CAÇAR MALDIÇÃO</button><div id="cacaBox" class="skill-shop"></div></div>
     <div id="combateBox" class="skill-shop"></div>
     <div class="footer-actions"><button class="main-btn blue-btn" onclick="irParaPagina3()">← VOLTAR PARA MISSÕES</button></div>
   </section>
@@ -1473,7 +1473,7 @@ async function abrirSkills(){
     const cats={ofensiva:'⚔️ OFENSIVAS',espacial:'🌀 ESPACIAIS',defensiva:'🛡️ DEFENSIVAS',controle:'⛓️ CONTROLE',alma:'👁️ ALMA',invocacao:'🐺 INVOCAÇÕES',reforco:'✨ REFORÇOS',versatil:'🔄 VERSÁTEIS',especial:'🧿 ESPECIAIS',anulacao:'🚫 ANULAÇÃO',maxima:'💥 TÉCNICAS MÁXIMAS',reversa:'🔁 TÉCNICAS REVERSAS',equipamento:'🎒 EQUIPAMENTOS ESPECIAIS'};
     const m=data.tree_meta;
     const path=`<div class="grade-path">${['Grade 4','Grade 3','Grade 2','Grade 1','Special Grade'].map(g=>`<span class="grade-node ${data.progresso&&data.progresso.grade===g?'active':''}">${g}</span>`).join('')}</div>`;
-    const treeBanner=data.skill_tree?`<div class="skill-card tree-banner"><img src="${m?.imagem||''}" alt="${escaparXml(m?.personagem||data.skill_tree_nome||'')}" onerror="this.style.display='none'"><div><div class="skill-tree-badge">🌳 ${escaparXml(data.skill_tree_nome)}</div><h2>${escaparXml(m?.personagem||'')}</h2><p class="tree-quote">“${escaparXml(m?.frase||'')}”</p><p><b>Regra:</b> uma única árvore por personagem. O domínio é progressão, não compra.</p>${path}</div></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a progressão.</p></div>`;
+    const treeBanner=data.skill_tree?`<div class="skill-card tree-banner"><img src="${m?.imagem||''}" alt="${escaparXml(m?.personagem||data.skill_tree_nome||'')}" onerror="this.style.display='none'"><div><div class="skill-tree-badge">🌳 ${escaparXml(data.skill_tree_nome)}</div><h2>${escaparXml(m?.personagem||'')}</h2><p class="tree-quote">“${escaparXml(m?.frase||'')}”</p><p><b>Regra:</b> uma única árvore por vez. Trocar custa <b>200 XP</b> e apaga todas as skills desbloqueadas anteriormente.</p>${path}<div style="margin-top:12px"><button class="main-btn red-btn" onclick="mudarSkillTree()">🔄 TROCAR SKILL TREE — 200 XP</button></div></div></div>`:`<div class="skill-card"><h2>🌳 Nenhuma Skill Tree escolhida</h2><p>Crie o personagem e escolha uma árvore para liberar a progressão.</p></div>`;
     const grupos=Object.entries(cats).map(([cat,title])=>{
       const items=data.skills.filter(x=>x.categoria===cat && x.tipo!=='domain' && !x.adquirida && x.mesma_arvore);
       if(!items.length)return '';
@@ -1488,6 +1488,25 @@ async function abrirSkills(){
     document.getElementById('skillResumo').textContent=`💰 ${data.xp} XP • ${owned.length} desbloqueadas • ${eq.toFixed(2)} CT equipados`;
   }catch(e){box.innerHTML=`<p>${e.message}</p>`;}
 }
+async function mudarSkillTree(){
+  const entries=Object.entries(SKILL_TREE_OPTIONS||{});
+  const atual=(document.getElementById('skillTree')?.value)||'';
+  const disponiveis=entries.filter(([id])=>id!==atual);
+  if(!disponiveis.length){alert('Não há outra Skill Tree disponível.');return;}
+  const lista=disponiveis.map(([id,v],i)=>`${i+1}. ${v[0]}`).join('\n');
+  const escolha=prompt(`Trocar Skill Tree custa 200 XP e apaga TODAS as skills atuais, incluindo as universais.\n\nEscolha uma nova árvore:\n${lista}\n\nDigite o número:`);
+  if(escolha===null)return;
+  const n=Number(escolha); if(!Number.isInteger(n)||n<1||n>disponiveis.length){alert('Escolha inválida.');return;}
+  const [treeId,treeInfo]=disponiveis[n-1];
+  if(!confirm(`Trocar para ${treeInfo[0]} por 200 XP?\n\nTodas as suas skills atuais serão perdidas e precisarão ser desbloqueadas novamente.`))return;
+  try{
+    const r=await api('/api/skill-tree/change',{method:'POST',body:JSON.stringify({tree_id:treeId})});
+    alert(`Skill Tree alterada para ${treeInfo[0]}. ${r.xp_gasto||0} XP gasto. Suas skills anteriores foram removidas.`);
+    await sincronizarDadosServidor();
+    await abrirSkills();
+  }catch(e){alert(e.message);}
+}
+
 async function comprarSkill(id){try{await api('/api/skills/'+encodeURIComponent(id)+'/buy',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
 async function alternarSkill(id){try{await api('/api/skills/'+encodeURIComponent(id)+'/toggle',{method:'POST'});await abrirSkills();}catch(e){alert(e.message);}}
 function abrirCombate(){mostrarPagina('paginaCombate');carregarCombate();carregarCaca();}
@@ -1534,18 +1553,19 @@ async function acaoEspecialBatalha(id,skill){
 async function acaoBatalha(id,skill){try{await api('/api/battles/'+id+'/action',{method:'POST',body:JSON.stringify({skill_id:skill})});await abrirBatalha(id);}catch(e){alert(e.message);}}
 
 async function carregarCaca(){
-  const box=document.getElementById('cacaBox'), btn=document.getElementById('botaoCacar');
+  const box=document.getElementById('cacaBox'), btn=document.getElementById('botaoCacar'), limite=document.getElementById('cacaLimite');
   if(!box)return;
   box.innerHTML='<p>Carregando caça...</p>';
   try{
     const data=await api('/api/entities');
-    const entidades=data.entidades||[];
-    if(btn) btn.disabled=!!data.usou && entidades.length===0;
+    const entidades=data.entidades||[], usadas=Number(data.lutas_usadas||0), restantes=Number(data.lutas_restantes??Math.max(0,2-usadas));
+    if(limite) limite.innerHTML=`Você já realizou <b>${usadas}/2</b> lutas contra maldições hoje. Restam <b>${restantes}</b>.`;
+    if(btn) btn.disabled=usadas>=2;
     if(!entidades.length){
-      box.innerHTML='<div class="skill-card"><p>Não há maldições disponíveis para enfrentar hoje. Volte amanhã para uma nova caça.</p></div>';
+      box.innerHTML=`<div class="skill-card"><p>${usadas>=2?'Você já realizou as 2 lutas contra maldições de hoje. Volte amanhã.':'Não há maldições disponíveis para enfrentar hoje. Volte amanhã para uma nova caça.'}</p></div>`;
       return;
     }
-    box.innerHTML=entidades.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p><b>HP:</b> ${Number(e.hp).toFixed(0)} • <b>CE:</b> ${Number(e.ce).toFixed(0)} • <b>CT:</b> ${Number(e.ct).toFixed(0)}</p><p><b>Ataque básico:</b> ${escaparXml(e.damage_expr||'1d4')} • <b>Técnicas:</b> ${(e.skills||[]).length}</p><div>${(e.skills||[]).map(s=>`<span class="skill-meta" style="display:inline-block;margin:3px">${escaparXml(s.nome)}</span>`).join('')}</div><button class="main-btn red-btn" onclick='iniciarLutaMaldicao(${JSON.stringify(e).replace(/</g,'\u003c')})'>⚔ LUTAR</button></div>`).join('');
+    box.innerHTML=entidades.map((e,i)=>`<div class="skill-card"><h3>☠️ ${escaparXml(e.grade)}</h3><p><b>HP:</b> ${Number(e.hp).toFixed(0)} • <b>CE:</b> ${Number(e.ce).toFixed(0)} • <b>CT:</b> ${Number(e.ct).toFixed(0)}</p><p><b>Ataque básico:</b> ${escaparXml(e.damage_expr||'1d4')} • <b>Técnicas:</b> ${(e.skills||[]).length}</p><div>${(e.skills||[]).map(s=>`<span class="skill-meta" style="display:inline-block;margin:3px">${escaparXml(s.nome)}</span>`).join('')}</div><button class="main-btn red-btn" onclick='iniciarLutaMaldicao(${JSON.stringify(e).replace(/</g,'\u003c')})' ${usadas>=2?'disabled':''}>⚔ ${usadas>=2?'LIMITE DIÁRIO ATINGIDO':'LUTAR'}</button></div>`).join('');
   }catch(e){box.innerHTML=`<div class="skill-card"><p>${escaparXml(e.message)}</p></div>`;}
 }
 
